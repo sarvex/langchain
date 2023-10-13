@@ -94,26 +94,25 @@ class MosaicMLInstructorEmbeddings(BaseModel, Embeddings):
 
             parsed_response = response.json()
 
-            # The inference API has changed a couple of times, so we add some handling
-            # to be robust to multiple response formats.
-            if isinstance(parsed_response, dict):
-                output_keys = ["data", "output", "outputs"]
-                for key in output_keys:
-                    if key in parsed_response:
-                        output_item = parsed_response[key]
-                        break
-                else:
-                    raise ValueError(
-                        f"No key data or output in response: {parsed_response}"
-                    )
-
-                if isinstance(output_item, list) and isinstance(output_item[0], list):
-                    embeddings = output_item
-                else:
-                    embeddings = [output_item]
-            else:
+            if not isinstance(parsed_response, dict):
                 raise ValueError(f"Unexpected response type: {parsed_response}")
 
+            output_keys = ["data", "output", "outputs"]
+            for key in output_keys:
+                if key in parsed_response:
+                    output_item = parsed_response[key]
+                    break
+            else:
+                raise ValueError(
+                    f"No key data or output in response: {parsed_response}"
+                )
+
+            embeddings = (
+                output_item
+                if isinstance(output_item, list)
+                and isinstance(output_item[0], list)
+                else [output_item]
+            )
         except requests.exceptions.JSONDecodeError as e:
             raise ValueError(
                 f"Error raised by inference API: {e}.\nResponse: {response.text}"
@@ -131,8 +130,7 @@ class MosaicMLInstructorEmbeddings(BaseModel, Embeddings):
             List of embeddings, one for each text.
         """
         instruction_pairs = [(self.embed_instruction, text) for text in texts]
-        embeddings = self._embed(instruction_pairs)
-        return embeddings
+        return self._embed(instruction_pairs)
 
     def embed_query(self, text: str) -> List[float]:
         """Embed a query using a MosaicML deployed instructor embedding model.
@@ -144,5 +142,4 @@ class MosaicMLInstructorEmbeddings(BaseModel, Embeddings):
             Embeddings for the text.
         """
         instruction_pair = (self.query_instruction, text)
-        embedding = self._embed([instruction_pair])[0]
-        return embedding
+        return self._embed([instruction_pair])[0]

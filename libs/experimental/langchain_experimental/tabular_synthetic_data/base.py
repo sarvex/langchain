@@ -54,10 +54,7 @@ class SyntheticDataGenerator(BaseModel):
 
     @staticmethod
     def _format_dict_to_string(input_dict: Dict) -> str:
-        formatted_str = ", ".join(
-            [f"{key}: {value}" for key, value in input_dict.items()]
-        )
-        return formatted_str
+        return ", ".join([f"{key}: {value}" for key, value in input_dict.items()])
 
     def _update_examples(self, example: Union[BaseModel, Dict[str, Any], str]) -> None:
         """Prevents duplicates by adding previously generated examples to the few shot

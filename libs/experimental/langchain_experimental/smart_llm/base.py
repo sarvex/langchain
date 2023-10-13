@@ -139,9 +139,7 @@ class SmartLLMChain(Chain):
         run_manager: Optional[CallbackManagerForChainRun] = None,
     ) -> Tuple[PromptValue, Optional[List[str]]]:
         """Prepare prompts from inputs."""
-        stop = None
-        if "stop" in inputs:
-            stop = inputs["stop"]
+        stop = inputs.get("stop", None)
         selected_inputs = {k: inputs[k] for k in self.prompt.input_variables}
         prompt = self.prompt.format_prompt(**selected_inputs)
         _colored_text = get_colored_text(prompt.to_string(), "green")
@@ -189,14 +187,13 @@ class SmartLLMChain(Chain):
     def get_prompt_strings(
         self, stage: str
     ) -> List[Tuple[Type[BaseMessagePromptTemplate], str]]:
-        role_strings: List[Tuple[Type[BaseMessagePromptTemplate], str]] = []
-        role_strings.append(
+        role_strings: List[Tuple[Type[BaseMessagePromptTemplate], str]] = [
             (
                 HumanMessagePromptTemplate,
                 "Question: {question}\nAnswer: Let's work this out in a step by "
                 "step way to be sure we have the right answer:",
             )
-        )
+        ]
         if stage == "ideation":
             return role_strings
         role_strings.extend(
@@ -204,7 +201,7 @@ class SmartLLMChain(Chain):
                 *[
                     (
                         AIMessagePromptTemplate,
-                        "Idea " + str(i + 1) + ": {idea_" + str(i + 1) + "}",
+                        f"Idea {str(i + 1)}" + ": {idea_" + str(i + 1) + "}",
                     )
                     for i in range(self.n_ideas)
                 ],
@@ -270,7 +267,7 @@ class SmartLLMChain(Chain):
             ]
             for i, idea in enumerate(ideas):
                 _colored_text = get_colored_text(idea, "blue")
-                _text = f"Idea {i+1}:\n" + _colored_text
+                _text = f"Idea {i + 1}:\n{_colored_text}"
                 if run_manager:
                     run_manager.on_text(_text, end="\n", verbose=self.verbose)
             return ideas

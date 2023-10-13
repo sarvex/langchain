@@ -67,7 +67,7 @@ def analyze_text(
         "gulpease_index": textstat.gulpease_index(text),
         "osman": textstat.osman(text),
     }
-    resp.update({"text_complexity_metrics": text_complexity_metrics})
+    resp["text_complexity_metrics"] = text_complexity_metrics
     resp.update(text_complexity_metrics)
 
     if nlp is not None:
@@ -315,8 +315,7 @@ class MlflowCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
 
         llm_starts = self.metrics["llm_starts"]
 
-        resp: Dict[str, Any] = {}
-        resp.update({"action": "on_llm_start"})
+        resp: Dict[str, Any] = {"action": "on_llm_start"}
         resp.update(flatten_dict(serialized))
         resp.update(self.metrics)
 
@@ -354,8 +353,7 @@ class MlflowCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
 
         llm_ends = self.metrics["llm_ends"]
 
-        resp: Dict[str, Any] = {}
-        resp.update({"action": "on_llm_end"})
+        resp: Dict[str, Any] = {"action": "on_llm_end"}
         resp.update(flatten_dict(response.llm_output or {}))
         resp.update(self.metrics)
 
@@ -381,8 +379,8 @@ class MlflowCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
                 self.mlflg.jsonf(resp, f"llm_end_{llm_ends}_generation_{idx}")
                 dependency_tree = generation_resp["dependency_tree"]
                 entities = generation_resp["entities"]
-                self.mlflg.html(dependency_tree, "dep-" + hash_string(generation.text))
-                self.mlflg.html(entities, "ent-" + hash_string(generation.text))
+                self.mlflg.html(dependency_tree, f"dep-{hash_string(generation.text)}")
+                self.mlflg.html(entities, f"ent-{hash_string(generation.text)}")
 
     def on_llm_error(self, error: BaseException, **kwargs: Any) -> None:
         """Run when LLM errors."""
@@ -399,8 +397,7 @@ class MlflowCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
 
         chain_starts = self.metrics["chain_starts"]
 
-        resp: Dict[str, Any] = {}
-        resp.update({"action": "on_chain_start"})
+        resp: Dict[str, Any] = {"action": "on_chain_start"}
         resp.update(flatten_dict(serialized))
         resp.update(self.metrics)
 
@@ -639,18 +636,12 @@ class MlflowCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
                     try:
                         langchain_asset.save_agent(langchain_asset_path)
                         self.mlflg.artifact(langchain_asset_path)
-                    except AttributeError:
+                    except (AttributeError, NotImplementedError):
                         print("Could not save model.")
                         traceback.print_exc()
-                        pass
-                    except NotImplementedError:
-                        print("Could not save model.")
-                        traceback.print_exc()
-                        pass
                 except NotImplementedError:
                     print("Could not save model.")
                     traceback.print_exc()
-                    pass
         if finish:
             self.mlflg.finish_run()
             self._reset()

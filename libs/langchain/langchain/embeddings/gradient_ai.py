@@ -98,11 +98,10 @@ class GradientEmbeddings(BaseModel, Embeddings):
         Returns:
             List of embeddings, one for each text.
         """
-        embeddings = self.client.embed(
+        return self.client.embed(
             model=self.model,
             texts=texts,
         )
-        return embeddings
 
     async def aembed_documents(self, texts: List[str]) -> List[List[float]]:
         """Async call out to Gradient's embedding endpoint.
@@ -113,11 +112,10 @@ class GradientEmbeddings(BaseModel, Embeddings):
         Returns:
             List of embeddings, one for each text.
         """
-        embeddings = await self.client.aembed(
+        return await self.client.aembed(
             model=self.model,
             texts=texts,
         )
-        return embeddings
 
     def embed_query(self, text: str) -> List[float]:
         """Call out to Gradient's embedding endpoint.
@@ -251,10 +249,10 @@ class TinyAsyncGradientEmbeddingClient:
         if len(texts) == 1:
             # special case query
             return [texts]
-        batches = []
-        for start_index in range(0, len(texts), self._batch_size):
-            batches.append(texts[start_index : start_index + self._batch_size])
-        return batches
+        return [
+            texts[start_index : start_index + self._batch_size]
+            for start_index in range(0, len(texts), self._batch_size)
+        ]
 
     @staticmethod
     def _unbatch(batch_of_texts: List[List[Any]]) -> List[Any]:
@@ -328,8 +326,7 @@ class TinyAsyncGradientEmbeddingClient:
                 embeddings_batch_perm = list(p.map(*map_args))
 
         embeddings_perm = self._unbatch(embeddings_batch_perm)
-        embeddings = unpermute_func(embeddings_perm)
-        return embeddings
+        return unpermute_func(embeddings_perm)
 
     async def _async_request(
         self, session: aiohttp.ClientSession, kwargs: Dict[str, Any]
@@ -373,5 +370,4 @@ class TinyAsyncGradientEmbeddingClient:
             )
 
         embeddings_perm = self._unbatch(embeddings_batch_perm)
-        embeddings = unpermute_func(embeddings_perm)
-        return embeddings
+        return unpermute_func(embeddings_perm)

@@ -97,15 +97,15 @@ def deprecated(
     """
 
     def deprecate(
-        obj: T,
-        *,
-        _obj_type: str = obj_type,
-        _name: str = name,
-        _message: str = message,
-        _alternative: str = alternative,
-        _pending: bool = pending,
-        _addendum: str = addendum,
-    ) -> T:
+            obj: T,
+            *,
+            _obj_type: str = obj_type,
+            _name: str = name,
+            _message: str = message,
+            _alternative: str = alternative,
+            _pending: bool = pending,
+            _addendum: str = addendum,
+        ) -> T:
         """Implementation of the decorator returned by `deprecated`."""
         if isinstance(obj, type):
             if not _obj_type:
@@ -116,10 +116,8 @@ def deprecated(
 
             def finalize(wrapper: Callable[..., Any], new_doc: str) -> T:
                 """Finalize the deprecation of a class."""
-                try:
+                with contextlib.suppress(AttributeError):
                     obj.__doc__ = new_doc
-                except AttributeError:  # Can't set on some extension objects.
-                    pass
                 obj.__init__ = functools.wraps(obj.__init__)(  # type: ignore[misc]
                     wrapper
                 )
@@ -212,11 +210,7 @@ def deprecated(
 
         old_doc = inspect.cleandoc(old_doc or "").strip("\n")
 
-        if not old_doc:
-            new_doc = "[*Deprecated*]"
-        else:
-            new_doc = f"[*Deprecated*]  {old_doc}"
-
+        new_doc = "[*Deprecated*]" if not old_doc else f"[*Deprecated*]  {old_doc}"
         # Modify the docstring to include a deprecation notice.
         notes_header = "\nNotes\n-----"
         components = [
@@ -289,24 +283,19 @@ def warn_deprecated(
     if pending and removal:
         raise ValueError("A pending deprecation cannot have a scheduled removal")
 
-    if not pending:
-        if not removal:
-            removal = f"in {removal}" if removal else "within ?? minor releases"
-            raise NotImplementedError(
-                f"Need to determine which default deprecation schedule to use. "
-                f"{removal}"
-            )
-        else:
-            removal = f"in {removal}"
+    if removal:
+        removal = f"in {removal}"
 
+    elif not pending:
+        removal = f"in {removal}" if removal else "within ?? minor releases"
+        raise NotImplementedError(
+            f"Need to determine which default deprecation schedule to use. "
+            f"{removal}"
+        )
     if not message:
         message = ""
 
-        if obj_type:
-            message += f"The {obj_type} `{name}`"
-        else:
-            message += f"`{name}`"
-
+        message += f"The {obj_type} `{name}`" if obj_type else f"`{name}`"
         if pending:
             message += " will be deprecated in a future version"
         else:

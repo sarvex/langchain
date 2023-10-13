@@ -40,7 +40,7 @@ def _create_function_message(
         try:
             content = json.dumps(observation, ensure_ascii=False)
         except Exception:
-            content = str(observation)
+            content = observation
     else:
         content = observation
     return FunctionMessage(

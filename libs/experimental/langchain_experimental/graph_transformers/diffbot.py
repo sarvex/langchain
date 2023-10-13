@@ -55,11 +55,10 @@ class NodesList:
         Returns:
             List[Node]: A list of Node objects.
         """
-        nodes = [
+        return [
             Node(id=key[0], type=key[1], properties=self.nodes[key])
             for key in self.nodes
         ]
-        return nodes
 
 
 # Properties that should be treated as node properties instead of relationships
@@ -224,7 +223,7 @@ class DiffbotGraphTransformer:
         # Nodes are a custom class because we need to deduplicate
         nodes_list = NodesList()
         # Relationships are a list because we don't deduplicate nor anything else
-        relationships = list()
+        relationships = []
         for record in payload["facts"]:
             # Skip if the fact is below the threshold confidence
             if record["confidence"] < self.fact_threshold_confidence:
@@ -276,7 +275,7 @@ class DiffbotGraphTransformer:
                 rel_properties = dict()
                 relationship_evidence = [el["passage"] for el in record["evidence"]][0]
                 if self.include_evidence:
-                    rel_properties.update({"evidence": relationship_evidence})
+                    rel_properties["evidence"] = relationship_evidence
                 if self.include_qualifiers and record.get("qualifiers"):
                     for property in record["qualifiers"]:
                         prop_key = format_property_key(property["property"]["name"])

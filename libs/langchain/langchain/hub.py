@@ -51,14 +51,13 @@ def push(
     """
     client = _get_client(api_url=api_url, api_key=api_key)
     manifest_json = dumps(object)
-    message = client.push(
+    return client.push(
         repo_full_name,
         manifest_json,
         parent_commit_hash=parent_commit_hash,
         new_repo_is_public=new_repo_is_public,
         new_repo_description=new_repo_description,
     )
-    return message
 
 
 def pull(

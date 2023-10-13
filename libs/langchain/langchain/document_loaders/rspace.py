@@ -115,14 +115,11 @@ class RSpaceLoader(BaseLoader):
 
     def lazy_load(self) -> Iterator[Document]:
         if self.global_id and "GL" in self.global_id:
-            for d in self._load_pdf():
-                yield d
+            yield from self._load_pdf()
         elif self.global_id and "SD" in self.global_id:
-            for d in self._load_structured_doc():
-                yield d
-        elif self.global_id and self.global_id[0:2] in ["FL", "NB"]:
-            for d in self._load_folder_tree():
-                yield d
+            yield from self._load_structured_doc()
+        elif self.global_id and self.global_id[:2] in ["FL", "NB"]:
+            yield from self._load_folder_tree()
         else:
             raise ValueError("Unknown global ID type")
 

@@ -102,12 +102,8 @@ class BeautifulSoupTransformer(BaseDocumentTransformer):
         for tag in tags:
             elements = soup.find_all(tag)
             for element in elements:
-                if tag == "a":
-                    href = element.get("href")
-                    if href:
-                        text_parts.append(f"{element.get_text()} ({href})")
-                    else:
-                        text_parts.append(element.get_text())
+                if tag == "a" and (href := element.get("href")):
+                    text_parts.append(f"{element.get_text()} ({href})")
                 else:
                     text_parts.append(element.get_text())
         return " ".join(text_parts)
@@ -132,8 +128,7 @@ class BeautifulSoupTransformer(BaseDocumentTransformer):
             if line not in seen:
                 seen.add(line)
                 deduped_lines.append(line)
-        cleaned_content = " ".join(deduped_lines)
-        return cleaned_content
+        return " ".join(deduped_lines)
 
     async def atransform_documents(
         self,

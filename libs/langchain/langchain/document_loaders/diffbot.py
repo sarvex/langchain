@@ -45,7 +45,7 @@ class DiffbotLoader(BaseLoader):
 
     def load(self) -> List[Document]:
         """Extract text from Diffbot on all the URLs and return Documents"""
-        docs: List[Document] = list()
+        docs: List[Document] = []
 
         for url in self.urls:
             try:

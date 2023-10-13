@@ -197,15 +197,7 @@ def create(
     resolved_path = project_directory_path.resolve()
 
     if not typer.confirm(
-        f"\n"
-        f"Creating a new LangChain project 🦜️🔗\n"
-        f"Name: {typer.style(project_name, fg=typer.colors.BRIGHT_CYAN)}\n"
-        f"Path: {typer.style(resolved_path, fg=typer.colors.BRIGHT_CYAN)}\n"
-        f"Project name: {typer.style(project_name, fg=typer.colors.BRIGHT_CYAN)}\n"
-        f"Author name: {typer.style(author_name, fg=typer.colors.BRIGHT_CYAN)}\n"
-        f"Author email: {typer.style(author_email, fg=typer.colors.BRIGHT_CYAN)}\n"
-        f"Use Poetry: {typer.style(str(use_poetry), fg=typer.colors.BRIGHT_CYAN)}\n"
-        "Continue?",
+        f"\nCreating a new LangChain project 🦜️🔗\nName: {typer.style(project_name_identifier, fg=typer.colors.BRIGHT_CYAN)}\nPath: {typer.style(resolved_path, fg=typer.colors.BRIGHT_CYAN)}\nProject name: {typer.style(project_name_identifier, fg=typer.colors.BRIGHT_CYAN)}\nAuthor name: {typer.style(author_name, fg=typer.colors.BRIGHT_CYAN)}\nAuthor email: {typer.style(author_email, fg=typer.colors.BRIGHT_CYAN)}\nUse Poetry: {typer.style(str(use_poetry), fg=typer.colors.BRIGHT_CYAN)}\nContinue?",
         default=True,
     ):
         typer.echo("Cancelled project creation. See you later! 👋")
@@ -214,12 +206,11 @@ def create(
     _create_project_dir(
         project_directory_path,
         use_poetry,
-        project_name,
+        project_name_identifier,
         project_name_identifier,
         author_name,
         author_email,
     )
-
     # TODO(Team): Add installation
     # if use_poetry:
     #     _poetry_install(project_directory_path)
@@ -229,12 +220,7 @@ def create(
     _init_git(project_directory_path)
 
     typer.echo(
-        f"\n{typer.style('Done!🙌', bold=True, fg=typer.colors.GREEN)}"
-        f" Your new LangChain project"
-        f" {typer.style(project_name, fg=typer.colors.BRIGHT_CYAN)}"
-        f" has been created in"
-        f" {typer.style(project_directory_path.resolve(), fg=typer.colors.BRIGHT_CYAN)}"
-        f"."
+        f"\n{typer.style('Done!🙌', bold=True, fg=typer.colors.GREEN)} Your new LangChain project {typer.style(project_name_identifier, fg=typer.colors.BRIGHT_CYAN)} has been created in {typer.style(project_directory_path.resolve(), fg=typer.colors.BRIGHT_CYAN)}."
     )
     # TODO(Team): Add surfacing information from make file and installation
     # cd_dir = typer.style(

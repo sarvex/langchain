@@ -59,7 +59,7 @@ class OneDriveLoader(O365BaseLoader):
             return subfolder_drive
 
         subfolders = [f for f in self.folder_path.split("/") if f != ""]
-        if len(subfolders) == 0:
+        if not subfolders:
             return subfolder_drive
 
         items = subfolder_drive.get_items()
@@ -68,7 +68,7 @@ class OneDriveLoader(O365BaseLoader):
                 subfolder_drive = list(filter(lambda x: subfolder in x.name, items))[0]
                 items = subfolder_drive.get_items()
             except (IndexError, AttributeError):
-                raise FileNotFoundError("Path {} not exist.".format(self.folder_path))
+                raise FileNotFoundError(f"Path {self.folder_path} not exist.")
         return subfolder_drive
 
     def lazy_load(self) -> Iterator[Document]:

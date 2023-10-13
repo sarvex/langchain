@@ -56,14 +56,11 @@ class ComprehendPII:
 
         threshold = config.get("threshold")
         pii_labels = config.get("labels")
-        pii_found = False
-        for entity in pii_identified["Labels"]:
-            if (entity["Score"] >= threshold and entity["Name"] in pii_labels) or (
-                entity["Score"] >= threshold and not pii_labels
-            ):
-                pii_found = True
-                break
-
+        pii_found = any(
+            (entity["Score"] >= threshold and entity["Name"] in pii_labels)
+            or (entity["Score"] >= threshold and not pii_labels)
+            for entity in pii_identified["Labels"]
+        )
         if self.callback and self.callback.pii_callback:
             if pii_found:
                 self.moderation_beacon["moderation_status"] = "LABELS_FOUND"

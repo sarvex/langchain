@@ -68,19 +68,18 @@ class CSVLoader(BaseLoader):
             with open(self.file_path, newline="", encoding=self.encoding) as csvfile:
                 docs = self.__read_file(csvfile)
         except UnicodeDecodeError as e:
-            if self.autodetect_encoding:
-                detected_encodings = detect_file_encodings(self.file_path)
-                for encoding in detected_encodings:
-                    try:
-                        with open(
-                            self.file_path, newline="", encoding=encoding.encoding
-                        ) as csvfile:
-                            docs = self.__read_file(csvfile)
-                            break
-                    except UnicodeDecodeError:
-                        continue
-            else:
+            if not self.autodetect_encoding:
                 raise RuntimeError(f"Error loading {self.file_path}") from e
+            detected_encodings = detect_file_encodings(self.file_path)
+            for encoding in detected_encodings:
+                try:
+                    with open(
+                        self.file_path, newline="", encoding=encoding.encoding
+                    ) as csvfile:
+                        docs = self.__read_file(csvfile)
+                        break
+                except UnicodeDecodeError:
+                    continue
         except Exception as e:
             raise RuntimeError(f"Error loading {self.file_path}") from e
 

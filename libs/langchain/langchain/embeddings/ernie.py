@@ -94,11 +94,11 @@ class ErnieEmbeddings(BaseModel, Embeddings):
         ]
         lst = []
         for chunk in text_in_chunks:
-            resp = self._embedding({"input": [text for text in chunk]})
+            resp = self._embedding({"input": list(chunk)})
             if resp.get("error_code"):
                 if resp.get("error_code") == 111:
                     self._refresh_access_token_with_lock()
-                    resp = self._embedding({"input": [text for text in chunk]})
+                    resp = self._embedding({"input": list(chunk)})
                 else:
                     raise ValueError(f"Error from Ernie: {resp}")
             lst.extend([i["embedding"] for i in resp["data"]])

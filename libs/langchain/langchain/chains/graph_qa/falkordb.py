@@ -63,8 +63,7 @@ class FalkorDBQAChain(Chain):
 
         :meta private:
         """
-        _output_keys = [self.output_key]
-        return _output_keys
+        return [self.output_key]
 
     @property
     def _chain_type(self) -> str:

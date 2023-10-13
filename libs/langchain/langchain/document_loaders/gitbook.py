@@ -60,9 +60,7 @@ class GitbookLoader(WebBaseLoader):
         else:
             soup_info = self.scrape()
             _documents = [self._get_document(soup_info, self.web_path)]
-        documents = [d for d in _documents if d]
-
-        return documents
+        return [d for d in _documents if d]
 
     def _get_document(
         self, soup: Any, custom_url: Optional[str] = None

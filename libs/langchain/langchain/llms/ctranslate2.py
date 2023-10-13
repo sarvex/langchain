@@ -116,10 +116,7 @@ class CTranslate2(BaseLLM):
         sequences = [result.sequences_ids[0] for result in results]
         decoded_sequences = [self.tokenizer.decode(seq) for seq in sequences]
 
-        generations = []
-        for text in decoded_sequences:
-            generations.append([Generation(text=text)])
-
+        generations = [[Generation(text=text)] for text in decoded_sequences]
         return LLMResult(generations=generations)
 
     @property

@@ -118,15 +118,14 @@ class ConfluenceLoader(BaseLoader):
         confluence_kwargs: Optional[dict] = None,
     ):
         confluence_kwargs = confluence_kwargs or {}
-        errors = ConfluenceLoader.validate_init_args(
+        if errors := ConfluenceLoader.validate_init_args(
             url=url,
             api_key=api_key,
             username=username,
             session=session,
             oauth2=oauth2,
             token=token,
-        )
-        if errors:
+        ):
             raise ValueError(f"Error(s) while validating input: {errors}")
         try:
             from atlassian import Confluence  # noqa: F401
@@ -181,9 +180,9 @@ class ConfluenceLoader(BaseLoader):
                 "the other must be as well."
             )
 
-        non_null_creds = list(
+        non_null_creds = [
             x is not None for x in ((api_key or username), session, oauth2, token)
-        )
+        ]
         if sum(non_null_creds) > 1:
             all_names = ("(api_key, username)", "session", "oath2", "token")
             provided = tuple(n for x, n in zip(non_null_creds, all_names) if x)
@@ -404,10 +403,10 @@ class ConfluenceLoader(BaseLoader):
                 ),
                 before_sleep=before_sleep_log(logger, logging.WARNING),
             )(retrieval_method)
-            batch = get_pages(**kwargs, start=len(docs))
-            if not batch:
+            if batch := get_pages(**kwargs, start=len(docs)):
+                docs.extend(batch)
+            else:
                 break
-            docs.extend(batch)
         return docs[:max_pages]
 
     def is_public_page(self, page: dict) -> bool:
@@ -485,15 +484,14 @@ class ConfluenceLoader(BaseLoader):
             # Use markdownify to keep the page Markdown style
             text = markdownify(content, heading_style="ATX") + "".join(attachment_texts)
 
+        elif keep_newlines:
+            text = BeautifulSoup(
+                content.replace("</p>", "\n</p>").replace("<br />", "\n"), "lxml"
+            ).get_text(" ") + "".join(attachment_texts)
         else:
-            if keep_newlines:
-                text = BeautifulSoup(
-                    content.replace("</p>", "\n</p>").replace("<br />", "\n"), "lxml"
-                ).get_text(" ") + "".join(attachment_texts)
-            else:
-                text = BeautifulSoup(content, "lxml").get_text(
-                    " ", strip=True
-                ) + "".join(attachment_texts)
+            text = BeautifulSoup(content, "lxml").get_text(
+                " ", strip=True
+            ) + "".join(attachment_texts)
 
         if include_comments:
             comments = self.confluence.get_page_comments(
@@ -544,11 +542,7 @@ class ConfluenceLoader(BaseLoader):
             try:
                 if media_type == "application/pdf":
                     text = title + self.process_pdf(absolute_url, ocr_languages)
-                elif (
-                    media_type == "image/png"
-                    or media_type == "image/jpg"
-                    or media_type == "image/jpeg"
-                ):
+                elif media_type in ["image/png", "image/jpg", "image/jpeg"]:
                     text = title + self.process_image(absolute_url, ocr_languages)
                 elif (
                     media_type == "application/vnd.openxmlformats-officedocument"
@@ -563,12 +557,11 @@ class ConfluenceLoader(BaseLoader):
                     continue
                 texts.append(text)
             except requests.HTTPError as e:
-                if e.response.status_code == 404:
-                    print(f"Attachment not found at {absolute_url}")
-                    continue
-                else:
+                if e.response.status_code != 404:
                     raise
 
+                print(f"Attachment not found at {absolute_url}")
+                continue
         return texts
 
     def process_pdf(
@@ -644,14 +637,12 @@ class ConfluenceLoader(BaseLoader):
             )
 
         response = self.confluence.request(path=link, absolute=True)
-        text = ""
-
         if (
             response.status_code != 200
             or response.content == b""
             or response.content is None
         ):
-            return text
+            return ""
         file_data = BytesIO(response.content)
 
         return docx2txt.process(file_data)
@@ -724,15 +715,12 @@ class ConfluenceLoader(BaseLoader):
             )
 
         response = self.confluence.request(path=link, absolute=True)
-        text = ""
-
         if (
             response.status_code != 200
             or response.content == b""
             or response.content is None
         ):
-            return text
-
+            return ""
         drawing = svg2rlg(BytesIO(response.content))
 
         img_data = BytesIO()

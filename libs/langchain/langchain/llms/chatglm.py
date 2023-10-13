@@ -106,16 +106,14 @@ class ChatGLM(LLM):
         try:
             parsed_response = response.json()
 
-            # Check if response content does exists
-            if isinstance(parsed_response, dict):
-                content_keys = "response"
-                if content_keys in parsed_response:
-                    text = parsed_response[content_keys]
-                else:
-                    raise ValueError(f"No content in response : {parsed_response}")
-            else:
+            if not isinstance(parsed_response, dict):
                 raise ValueError(f"Unexpected response type: {parsed_response}")
 
+            content_keys = "response"
+            if content_keys in parsed_response:
+                text = parsed_response[content_keys]
+            else:
+                raise ValueError(f"No content in response : {parsed_response}")
         except requests.exceptions.JSONDecodeError as e:
             raise ValueError(
                 f"Error raised during decoding response from inference endpoint: {e}."

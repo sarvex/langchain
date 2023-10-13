@@ -153,15 +153,17 @@ def test_update_with_delayed_score() -> None:
 def test_user_defined_scorer() -> None:
     llm, PROMPT = setup()
 
+
+
     class CustomSelectionScorer(rl_chain.SelectionScorer):
         def score_response(
-            self,
-            inputs: Dict[str, Any],
-            llm_response: str,
-            event: pick_best_chain.PickBestEvent,
-        ) -> float:
-            score = 200
-            return score
+                    self,
+                    inputs: Dict[str, Any],
+                    llm_response: str,
+                    event: pick_best_chain.PickBestEvent,
+                ) -> float:
+            return 200
+
 
     chain = pick_best_chain.PickBest.from_llm(
         llm=llm,
@@ -202,7 +204,7 @@ def test_everything_embedded() -> None:
 
     encoded_ctx_str_1 = rl_chain.stringify_embedding(list(encoded_keyword + ctx_str_1))
 
-    expected = f"""shared |User {ctx_str_1 + " " + encoded_ctx_str_1} \n|action {str1 + " " + encoded_str1} \n|action {str2 + " " + encoded_str2} \n|action {str3 + " " + encoded_str3} """  # noqa
+    expected = f"""shared |User {ctx_str_1} {encoded_ctx_str_1} \n|action {str1} {encoded_str1} \n|action {str2} {encoded_str2} \n|action {str3} {encoded_str3} """
 
     actions = [str1, str2, str3]
 

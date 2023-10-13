@@ -51,8 +51,7 @@ class ReActSingleInputOutputParser(AgentOutputParser):
         regex = (
             r"Action\s*\d*\s*:[\s]*(.*?)[\s]*Action\s*\d*\s*Input\s*\d*\s*:[\s]*(.*)"
         )
-        action_match = re.search(regex, text, re.DOTALL)
-        if action_match:
+        if action_match := re.search(regex, text, re.DOTALL):
             if includes_answer:
                 raise OutputParserException(
                     f"{FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE}: {text}"

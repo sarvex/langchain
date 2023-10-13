@@ -26,7 +26,7 @@ def _load_agent_from_tools(
         raise ValueError(f"Loading {config_type} agent not supported")
 
     agent_cls = AGENT_TO_CLASS[config_type]
-    combined_config = {**config, **kwargs}
+    combined_config = config | kwargs
     return agent_cls.from_llm_and_tools(llm, tools, **combined_config)
 
 
@@ -49,8 +49,7 @@ def load_agent_from_config(
     """
     if "_type" not in config:
         raise ValueError("Must specify an agent Type in config")
-    load_from_tools = config.pop("load_from_llm_and_tools", False)
-    if load_from_tools:
+    if load_from_tools := config.pop("load_from_llm_and_tools", False):
         if llm is None:
             raise ValueError(
                 "If `load_from_llm_and_tools` is set to True, "
@@ -81,7 +80,7 @@ def load_agent_from_config(
         )
         del config["output_parser"]
 
-    combined_config = {**config, **kwargs}
+    combined_config = config | kwargs
     return agent_cls(**combined_config)  # type: ignore
 
 
@@ -110,12 +109,8 @@ def _load_agent_from_file(
     file: Union[str, Path], **kwargs: Any
 ) -> Union[BaseSingleActionAgent, BaseMultiActionAgent]:
     """Load agent from file."""
-    valid_suffixes = {"json", "yaml"}
     # Convert file to Path object.
-    if isinstance(file, str):
-        file_path = Path(file)
-    else:
-        file_path = file
+    file_path = Path(file) if isinstance(file, str) else file
     # Load from either json or yaml.
     if file_path.suffix[1:] == "json":
         with open(file_path) as f:
@@ -124,6 +119,7 @@ def _load_agent_from_file(
         with open(file_path, "r") as f:
             config = yaml.safe_load(f)
     else:
+        valid_suffixes = {"json", "yaml"}
         raise ValueError(f"Unsupported file type, must be one of {valid_suffixes}.")
     # Load the agent from the config now.
     return load_agent_from_config(config, **kwargs)

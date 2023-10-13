@@ -80,10 +80,7 @@ def get_llm_table():
         cls = getattr(llms, cm)
         if issubclass(cls, LLM):
             for feat in ("_stream", "_astream", ("_acall", "_agenerate")):
-                if isinstance(feat, tuple):
-                    feat, name = feat
-                else:
-                    feat, name = feat, feat
+                feat, name = feat if isinstance(feat, tuple) else (feat, feat)
                 llm_feat_table[cm][name] = getattr(cls, feat) != getattr(LLM, feat)
         else:
             for feat in [
@@ -93,10 +90,7 @@ def get_llm_table():
                 "_agenerate",
                 ("_agenerate", "batch_agenerate"),
             ]:
-                if isinstance(feat, tuple):
-                    feat, name = feat
-                else:
-                    feat, name = feat, feat
+                feat, name = feat if isinstance(feat, tuple) else (feat, feat)
                 llm_feat_table[cm][name] = getattr(cls, feat) != getattr(BaseLLM, feat)
     final_feats = {
         k: v

@@ -97,8 +97,8 @@ class O365BaseLoader(BaseLoader, BaseModel):
         with tempfile.TemporaryDirectory() as temp_dir:
             os.makedirs(os.path.dirname(temp_dir), exist_ok=True)
             for file in items:
-                if file.is_file:
-                    if file.mime_type in list(file_mime_types.values()):
+                if file.mime_type in list(file_mime_types.values()):
+                    if file.is_file:
                         file.download(to_path=temp_dir, chunk_size=self.chunk_size)
             loader = FileSystemBlobLoader(path=temp_dir)
             yield from loader.yield_blobs()
@@ -131,8 +131,8 @@ class O365BaseLoader(BaseLoader, BaseModel):
                         f"object_id {object_id} in drive {drive}."
                     )
                     continue
-                if file.is_file:
-                    if file.mime_type in list(file_mime_types.values()):
+                if file.mime_type in list(file_mime_types.values()):
+                    if file.is_file:
                         file.download(to_path=temp_dir, chunk_size=self.chunk_size)
             loader = FileSystemBlobLoader(path=temp_dir)
             yield from loader.yield_blobs()

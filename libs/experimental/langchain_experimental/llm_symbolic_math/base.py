@@ -77,13 +77,12 @@ class LLMSymbolicMathChain(Chain):
     ) -> Dict[str, str]:
         run_manager.on_text(llm_output, color="green", verbose=self.verbose)
         llm_output = llm_output.strip()
-        text_match = re.search(r"^```text(.*?)```", llm_output, re.DOTALL)
-        if text_match:
+        if text_match := re.search(r"^```text(.*?)```", llm_output, re.DOTALL):
             expression = text_match.group(1)
             output = self._evaluate_expression(expression)
             run_manager.on_text("\nAnswer: ", verbose=self.verbose)
             run_manager.on_text(output, color="yellow", verbose=self.verbose)
-            answer = "Answer: " + output
+            answer = f"Answer: {output}"
         elif llm_output.startswith("Answer:"):
             answer = llm_output
         elif "Answer:" in llm_output:
@@ -99,13 +98,12 @@ class LLMSymbolicMathChain(Chain):
     ) -> Dict[str, str]:
         await run_manager.on_text(llm_output, color="green", verbose=self.verbose)
         llm_output = llm_output.strip()
-        text_match = re.search(r"^```text(.*?)```", llm_output, re.DOTALL)
-        if text_match:
+        if text_match := re.search(r"^```text(.*?)```", llm_output, re.DOTALL):
             expression = text_match.group(1)
             output = self._evaluate_expression(expression)
             await run_manager.on_text("\nAnswer: ", verbose=self.verbose)
             await run_manager.on_text(output, color="yellow", verbose=self.verbose)
-            answer = "Answer: " + output
+            answer = f"Answer: {output}"
         elif llm_output.startswith("Answer:"):
             answer = llm_output
         elif "Answer:" in llm_output:

@@ -24,10 +24,10 @@ def _extract_email_content(msg: Any) -> HumanMessage:
             pattern = re.compile(r"\r\nOn .+(\r\n)*wrote:\r\n")
             # Split the email body and extract the first part
             newest_response = re.split(pattern, data)[0]
-            message = HumanMessage(
-                content=newest_response, additional_kwargs={"sender": from_email}
+            return HumanMessage(
+                content=newest_response,
+                additional_kwargs={"sender": from_email},
             )
-            return message
     raise ValueError
 
 
@@ -107,5 +107,3 @@ class GMailLoader(BaseChatLoader):
                 # TODO: handle errors better
                 if self.raise_error:
                     raise e
-                else:
-                    pass

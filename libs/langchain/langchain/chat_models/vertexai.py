@@ -72,8 +72,7 @@ def _parse_chat_history(history: List[BaseMessage]) -> _ChatHistory:
             raise ValueError(
                 f"Unexpected message with type {type(message)} at the position {i}."
             )
-    chat_history = _ChatHistory(context=context, history=vertex_messages)
-    return chat_history
+    return _ChatHistory(context=context, history=vertex_messages)
 
 
 def _parse_examples(examples: List[BaseMessage]) -> List["InputOutputTextPair"]:
@@ -125,7 +124,7 @@ class ChatVertexAI(_VertexAICommon, BaseChatModel):
     "Underlying model name."
 
     @classmethod
-    def is_lc_serializable(self) -> bool:
+    def is_lc_serializable(cls) -> bool:
         return True
 
     @root_validator()
@@ -178,8 +177,7 @@ class ChatVertexAI(_VertexAICommon, BaseChatModel):
         question = _get_question(messages)
         history = _parse_chat_history(messages[:-1])
         params = self._prepare_params(stop=stop, **kwargs)
-        examples = kwargs.get("examples", None)
-        if examples:
+        if examples := kwargs.get("examples", None):
             params["examples"] = _parse_examples(examples)
 
         chat = self._start_chat(history, params)
@@ -215,8 +213,7 @@ class ChatVertexAI(_VertexAICommon, BaseChatModel):
         question = _get_question(messages)
         history = _parse_chat_history(messages[:-1])
         params = self._prepare_params(stop=stop, **kwargs)
-        examples = kwargs.get("examples", None)
-        if examples:
+        if examples := kwargs.get("examples", None):
             params["examples"] = _parse_examples(examples)
 
         chat = self._start_chat(history, params)
@@ -235,8 +232,7 @@ class ChatVertexAI(_VertexAICommon, BaseChatModel):
         question = _get_question(messages)
         history = _parse_chat_history(messages[:-1])
         params = self._prepare_params(stop=stop, **kwargs)
-        examples = kwargs.get("examples", None)
-        if examples:
+        if examples := kwargs.get("examples", None):
             params["examples"] = _parse_examples(examples)
 
         chat = self._start_chat(history, params)

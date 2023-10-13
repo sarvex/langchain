@@ -16,8 +16,9 @@ from langchain.schema.language_model import BaseLanguageModel
 
 
 def _get_score(text: str) -> Optional[Tuple[str, int]]:
-    match = re.search(r"grade:\s*(correct|incorrect)", text.strip(), re.IGNORECASE)
-    if match:
+    if match := re.search(
+        r"grade:\s*(correct|incorrect)", text.strip(), re.IGNORECASE
+    ):
         if match.group(1).upper() == "CORRECT":
             return "CORRECT", 1
         elif match.group(1).upper() == "INCORRECT":
@@ -55,10 +56,7 @@ def _parse_string_eval_output(text: str) -> dict:
     """
     reasoning = text.strip()
     parsed_scores = _get_score(reasoning)
-    if parsed_scores is None:
-        value, score = None, None
-    else:
-        value, score = parsed_scores
+    value, score = (None, None) if parsed_scores is None else parsed_scores
     return {
         "reasoning": reasoning,
         "value": value,

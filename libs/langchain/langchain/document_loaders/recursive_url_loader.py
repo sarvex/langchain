@@ -139,8 +139,7 @@ class RecursiveUrlLoader(BaseLoader):
                 f"{e.__class__.__name__}"
             )
             return
-        content = self.extractor(response.text)
-        if content:
+        if content := self.extractor(response.text):
             yield Document(
                 page_content=content,
                 metadata=self.metadata_extractor(response.text, url),
@@ -215,8 +214,7 @@ class RecursiveUrlLoader(BaseLoader):
                 await session.close()
             return []
         results = []
-        content = self.extractor(text)
-        if content:
+        if content := self.extractor(text):
             results.append(
                 Document(
                     page_content=content,
@@ -237,12 +235,12 @@ class RecursiveUrlLoader(BaseLoader):
             sub_tasks = []
             async with self._lock:  # type: ignore
                 to_visit = set(sub_links).difference(visited)
-                for link in to_visit:
-                    sub_tasks.append(
-                        self._async_get_child_links_recursive(
-                            link, visited, session=session, depth=depth + 1
-                        )
+                sub_tasks.extend(
+                    self._async_get_child_links_recursive(
+                        link, visited, session=session, depth=depth + 1
                     )
+                    for link in to_visit
+                )
             next_results = await asyncio.gather(*sub_tasks)
             for sub_result in next_results:
                 if isinstance(sub_result, Exception) or sub_result is None:
@@ -260,13 +258,12 @@ class RecursiveUrlLoader(BaseLoader):
         When use_async is True, this function will not be lazy,
         but it will still work in the expected way, just not lazy."""
         visited: Set[str] = set()
-        if self.use_async:
-            results = asyncio.run(
-                self._async_get_child_links_recursive(self.url, visited)
-            )
-            return iter(results or [])
-        else:
+        if not self.use_async:
             return self._get_child_links_recursive(self.url, visited)
+        results = asyncio.run(
+            self._async_get_child_links_recursive(self.url, visited)
+        )
+        return iter(results or [])
 
     def load(self) -> List[Document]:
         """Load web pages."""

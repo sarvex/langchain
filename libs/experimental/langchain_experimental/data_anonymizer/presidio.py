@@ -319,11 +319,9 @@ class PresidioReversibleAnonymizer(PresidioAnonymizerBase, ReversibleAnonymizerB
                 "Please call anonymize() and anonymize some text first.",
             )
 
-        text_to_deanonymize = deanonymizer_matching_strategy(
+        return deanonymizer_matching_strategy(
             text_to_deanonymize, self.deanonymizer_mapping
         )
-
-        return text_to_deanonymize
 
     def reset_deanonymizer_mapping(self) -> None:
         """Reset the deanonymizer mapping"""

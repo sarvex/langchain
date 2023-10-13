@@ -73,8 +73,5 @@ class ConcurrentLoader(GenericLoader):
             suffixes=suffixes,
             show_progress=show_progress,
         )
-        if isinstance(parser, str):
-            blob_parser = get_parser(parser)
-        else:
-            blob_parser = parser
+        blob_parser = get_parser(parser) if isinstance(parser, str) else parser
         return cls(blob_loader, blob_parser, num_workers=num_workers)

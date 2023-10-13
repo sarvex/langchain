@@ -149,9 +149,7 @@ class ChatFireworks(BaseChatModel):
         return self._create_chat_result(response)
 
     def _combine_llm_outputs(self, llm_outputs: List[Optional[dict]]) -> dict:
-        if llm_outputs[0] is None:
-            return {}
-        return llm_outputs[0]
+        return {} if llm_outputs[0] is None else llm_outputs[0]
 
     def _create_chat_result(self, response: Any) -> ChatResult:
         generations = []
@@ -168,8 +166,7 @@ class ChatFireworks(BaseChatModel):
     def _create_message_dicts(
         self, messages: List[BaseMessage]
     ) -> List[Dict[str, Any]]:
-        message_dicts = [convert_message_to_dict(m) for m in messages]
-        return message_dicts
+        return [convert_message_to_dict(m) for m in messages]
 
     def _stream(
         self,

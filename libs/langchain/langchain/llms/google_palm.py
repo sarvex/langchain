@@ -66,10 +66,7 @@ def _strip_erroneous_leading_spaces(text: str) -> str:
     lines > 1. This function strips that space.
     """
     has_leading_space = all(not line or line[0] == " " for line in text.split("\n")[1:])
-    if has_leading_space:
-        return text.replace("\n ", "\n")
-    else:
-        return text
+    return text.replace("\n ", "\n") if has_leading_space else text
 
 
 class GooglePalm(BaseLLM, BaseModel):
@@ -100,7 +97,7 @@ class GooglePalm(BaseLLM, BaseModel):
         return {"google_api_key": "GOOGLE_API_KEY"}
 
     @classmethod
-    def is_lc_serializable(self) -> bool:
+    def is_lc_serializable(cls) -> bool:
         return True
 
     @root_validator()

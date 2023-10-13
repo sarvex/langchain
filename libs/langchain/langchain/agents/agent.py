@@ -168,11 +168,7 @@ class BaseSingleActionAgent(BaseModel):
             agent.agent.save(file_path="path/agent.yaml")
         """
         # Convert file to Path object.
-        if isinstance(file_path, str):
-            save_path = Path(file_path)
-        else:
-            save_path = file_path
-
+        save_path = Path(file_path) if isinstance(file_path, str) else file_path
         directory_path = save_path.parent
         directory_path.mkdir(parents=True, exist_ok=True)
 
@@ -290,11 +286,7 @@ class BaseMultiActionAgent(BaseModel):
             agent.agent.save(file_path="path/agent.yaml")
         """
         # Convert file to Path object.
-        if isinstance(file_path, str):
-            save_path = Path(file_path)
-        else:
-            save_path = file_path
-
+        save_path = Path(file_path) if isinstance(file_path, str) else file_path
         directory_path = save_path.parent
         directory_path.mkdir(parents=True, exist_ok=True)
 
@@ -367,8 +359,7 @@ class RunnableAgent(BaseSingleActionAgent):
             Action specifying what tool to use.
         """
         inputs = {**kwargs, **{"intermediate_steps": intermediate_steps}}
-        output = self.runnable.invoke(inputs, config={"callbacks": callbacks})
-        return output
+        return self.runnable.invoke(inputs, config={"callbacks": callbacks})
 
     async def aplan(
         self,
@@ -388,8 +379,7 @@ class RunnableAgent(BaseSingleActionAgent):
             Action specifying what tool to use.
         """
         inputs = {**kwargs, **{"intermediate_steps": intermediate_steps}}
-        output = await self.runnable.ainvoke(inputs, config={"callbacks": callbacks})
-        return output
+        return await self.runnable.ainvoke(inputs, config={"callbacks": callbacks})
 
 
 class LLMSingleActionAgent(BaseSingleActionAgent):
@@ -560,8 +550,7 @@ class Agent(BaseSingleActionAgent):
         """
         full_inputs = self.get_full_inputs(intermediate_steps, **kwargs)
         full_output = await self.llm_chain.apredict(callbacks=callbacks, **full_inputs)
-        agent_output = await self.output_parser.aparse(full_output)
-        return agent_output
+        return await self.output_parser.aparse(full_output)
 
     def get_full_inputs(
         self, intermediate_steps: List[Tuple[AgentAction, str]], **kwargs: Any
@@ -569,8 +558,7 @@ class Agent(BaseSingleActionAgent):
         """Create the full inputs for the LLMChain from intermediate steps."""
         thoughts = self._construct_scratchpad(intermediate_steps)
         new_inputs = {"agent_scratchpad": thoughts, "stop": self._stop}
-        full_inputs = {**kwargs, **new_inputs}
-        return full_inputs
+        return kwargs | new_inputs
 
     @property
     def input_keys(self) -> List[str]:
@@ -673,17 +661,15 @@ class Agent(BaseSingleActionAgent):
                 "\n\nI now need to return a final answer based on the previous steps:"
             )
             new_inputs = {"agent_scratchpad": thoughts, "stop": self._stop}
-            full_inputs = {**kwargs, **new_inputs}
+            full_inputs = kwargs | new_inputs
             full_output = self.llm_chain.predict(**full_inputs)
             # We try to extract a final answer
             parsed_output = self.output_parser.parse(full_output)
-            if isinstance(parsed_output, AgentFinish):
-                # If we can extract, we send the correct stuff
-                return parsed_output
-            else:
-                # If we can extract, but the tool is not the final tool,
-                # we just return the full output
-                return AgentFinish({"output": full_output}, full_output)
+            return (
+                parsed_output
+                if isinstance(parsed_output, AgentFinish)
+                else AgentFinish({"output": full_output}, full_output)
+            )
         else:
             raise ValueError(
                 "early_stopping_method should be one of `force` or `generate`, "
@@ -788,7 +774,7 @@ class AgentExecutor(Chain):
         tools = values["tools"]
         allowed_tools = agent.get_allowed_tools()
         if allowed_tools is not None:
-            if set(allowed_tools) != set([tool.name for tool in tools]):
+            if set(allowed_tools) != {tool.name for tool in tools}:
                 raise ValueError(
                     f"Allowed tools ({allowed_tools}) different than "
                     f"provided tools ({[tool.name for tool in tools]})"
@@ -799,8 +785,8 @@ class AgentExecutor(Chain):
     def validate_return_direct_tool(cls, values: Dict) -> Dict:
         """Validate that tools are compatible with agent."""
         agent = values["agent"]
-        tools = values["tools"]
         if isinstance(agent, BaseMultiActionAgent):
+            tools = values["tools"]
             for tool in tools:
                 if tool.return_direct:
                     raise ValueError(
@@ -873,13 +859,10 @@ class AgentExecutor(Chain):
     def _should_continue(self, iterations: int, time_elapsed: float) -> bool:
         if self.max_iterations is not None and iterations >= self.max_iterations:
             return False
-        if (
-            self.max_execution_time is not None
-            and time_elapsed >= self.max_execution_time
-        ):
-            return False
-
-        return True
+        return (
+            self.max_execution_time is None
+            or time_elapsed < self.max_execution_time
+        )
 
     def _return(
         self,
@@ -971,10 +954,7 @@ class AgentExecutor(Chain):
         if isinstance(output, AgentFinish):
             return output
         actions: List[AgentAction]
-        if isinstance(output, AgentAction):
-            actions = [output]
-        else:
-            actions = output
+        actions = [output] if isinstance(output, AgentAction) else output
         result = []
         for agent_action in actions:
             if run_manager:
@@ -1070,11 +1050,7 @@ class AgentExecutor(Chain):
         if isinstance(output, AgentFinish):
             return output
         actions: List[AgentAction]
-        if isinstance(output, AgentAction):
-            actions = [output]
-        else:
-            actions = output
-
+        actions = [output] if isinstance(output, AgentAction) else output
         async def _aperform_agent_action(
             agent_action: AgentAction,
         ) -> Tuple[AgentAction, str]:

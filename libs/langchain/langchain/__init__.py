@@ -320,8 +320,7 @@ def __getattr__(name: str) -> Any:
         _warn_on_import(name)
 
         return ElasticVectorSearch
-    # For backwards compatibility
-    elif name == "SerpAPIChain" or name == "SerpAPIWrapper":
+    elif name in {"SerpAPIChain", "SerpAPIWrapper"}:
         from langchain.utilities import SerpAPIWrapper
 
         _warn_on_import(name)

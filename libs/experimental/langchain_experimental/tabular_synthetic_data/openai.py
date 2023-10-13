@@ -59,6 +59,4 @@ def create_openai_data_generator(
         output_schema, llm, prompt, output_parser=output_parser, **kwargs
     )
 
-    # Create the SyntheticDataGenerator instance with the created chain
-    generator = SyntheticDataGenerator(template=prompt, llm_chain=chain)
-    return generator
+    return SyntheticDataGenerator(template=prompt, llm_chain=chain)

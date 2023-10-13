@@ -35,13 +35,13 @@ class SingleFileFacebookMessengerChatLoader(BaseChatLoader):
         with open(self.file_path) as f:
             data = json.load(f)
         sorted_data = sorted(data["messages"], key=lambda x: x["timestamp_ms"])
-        messages = []
-        for m in sorted_data:
-            messages.append(
-                HumanMessage(
-                    content=m["content"], additional_kwargs={"sender": m["sender_name"]}
-                )
+        messages = [
+            HumanMessage(
+                content=m["content"],
+                additional_kwargs={"sender": m["sender_name"]},
             )
+            for m in sorted_data
+        ]
         yield ChatSession(messages=messages)
 
 
@@ -74,5 +74,4 @@ class FolderFacebookMessengerChatLoader(BaseChatLoader):
                 for _file in _dir.iterdir():
                     if _file.suffix.lower() == ".json":
                         file_loader = SingleFileFacebookMessengerChatLoader(path=_file)
-                        for result in file_loader.lazy_load():
-                            yield result
+                        yield from file_loader.lazy_load()

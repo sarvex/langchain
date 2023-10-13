@@ -77,8 +77,7 @@ class VectorSQLRetrieveAllOutputParser(VectorSQLOutputParser):
 
 
 def get_result_from_sqldb(db: SQLDatabase, cmd: str) -> Sequence[Dict[str, Any]]:
-    result = db._execute(cmd, fetch="all")
-    return result
+    return db._execute(cmd, fetch="all")
 
 
 class VectorSQLDatabaseChain(SQLDatabaseChain):

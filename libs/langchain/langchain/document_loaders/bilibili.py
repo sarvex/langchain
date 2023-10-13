@@ -44,24 +44,21 @@ class BiliBiliLoader(BaseLoader):
             v = video.Video(bvid=bvid.group())
         else:
             aid = re.search(r"av[0-9]+", url)
-            if aid is not None:
-                try:
-                    v = video.Video(aid=int(aid.group()[2:]))
-                except AttributeError:
-                    raise ValueError(f"{url} is not bilibili url.")
-            else:
+            if aid is None:
                 raise ValueError(f"{url} is not bilibili url.")
 
+            try:
+                v = video.Video(aid=int(aid.group()[2:]))
+            except AttributeError:
+                raise ValueError(f"{url} is not bilibili url.")
         video_info = sync(v.get_info())
         video_info.update({"url": url})
         sub = sync(v.get_subtitle(video_info["cid"]))
 
-        # Get subtitle url
-        sub_list = sub["subtitles"]
-        if sub_list:
+        if sub_list := sub["subtitles"]:
             sub_url = sub_list[0]["subtitle_url"]
             if not sub_url.startswith("http"):
-                sub_url = "https:" + sub_url
+                sub_url = f"https:{sub_url}"
             result = requests.get(sub_url)
             raw_sub_titles = json.loads(result.content)["body"]
             raw_transcript = " ".join([c["content"] for c in raw_sub_titles])

@@ -101,20 +101,19 @@ def convert_openai_messages(messages: Sequence[Dict[str, Any]]) -> List[BaseMess
 
 def _convert_message_chunk_to_delta(chunk: BaseMessageChunk, i: int) -> Dict[str, Any]:
     _dict: Dict[str, Any] = {}
-    if isinstance(chunk, AIMessageChunk):
-        if i == 0:
-            # Only shows up in the first chunk
-            _dict["role"] = "assistant"
-        if "function_call" in chunk.additional_kwargs:
-            _dict["function_call"] = chunk.additional_kwargs["function_call"]
-            # If the first chunk is a function call, the content is not empty string,
-            # not missing, but None.
-            if i == 0:
-                _dict["content"] = None
-        else:
-            _dict["content"] = chunk.content
-    else:
+    if not isinstance(chunk, AIMessageChunk):
         raise ValueError(f"Got unexpected streaming chunk type: {type(chunk)}")
+    if i == 0:
+        # Only shows up in the first chunk
+        _dict["role"] = "assistant"
+    if "function_call" in chunk.additional_kwargs:
+        _dict["function_call"] = chunk.additional_kwargs["function_call"]
+        # If the first chunk is a function call, the content is not empty string,
+        # not missing, but None.
+        if i == 0:
+            _dict["content"] = None
+    else:
+        _dict["content"] = chunk.content
     # This only happens at the end of streams, and OpenAI returns as empty dict
     if _dict == {"content": ""}:
         _dict = {}
@@ -156,14 +155,13 @@ class ChatCompletion:
         model_cls = getattr(models, provider)
         model_config = model_cls(**kwargs)
         converted_messages = convert_openai_messages(messages)
-        if not stream:
-            result = model_config.invoke(converted_messages)
-            return {"choices": [{"message": convert_message_to_dict(result)}]}
-        else:
+        if stream:
             return (
                 _convert_message_chunk_to_delta(c, i)
                 for i, c in enumerate(model_config.stream(converted_messages))
             )
+        result = model_config.invoke(converted_messages)
+        return {"choices": [{"message": convert_message_to_dict(result)}]}
 
     @overload
     @staticmethod
@@ -199,19 +197,18 @@ class ChatCompletion:
         model_cls = getattr(models, provider)
         model_config = model_cls(**kwargs)
         converted_messages = convert_openai_messages(messages)
-        if not stream:
-            result = await model_config.ainvoke(converted_messages)
-            return {"choices": [{"message": convert_message_to_dict(result)}]}
-        else:
+        if stream:
             return (
                 _convert_message_chunk_to_delta(c, i)
                 async for i, c in aenumerate(model_config.astream(converted_messages))
             )
+        result = await model_config.ainvoke(converted_messages)
+        return {"choices": [{"message": convert_message_to_dict(result)}]}
 
 
 def _has_assistant_message(session: ChatSession) -> bool:
     """Check if chat session has an assistant message."""
-    return any([isinstance(m, AIMessage) for m in session["messages"]])
+    return any(isinstance(m, AIMessage) for m in session["messages"])
 
 
 def convert_messages_for_finetuning(

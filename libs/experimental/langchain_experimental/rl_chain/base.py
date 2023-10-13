@@ -113,7 +113,7 @@ def parse_lines(parser: "vw.TextFormatParser", input_str: str) -> List["vw.Examp
 def get_based_on_and_to_select_from(inputs: Dict[str, Any]) -> Tuple[Dict, Dict]:
     to_select_from = {
         k: inputs[k].value
-        for k in inputs.keys()
+        for k in inputs
         if isinstance(inputs[k], _ToSelectFrom)
     }
 
@@ -123,8 +123,10 @@ def get_based_on_and_to_select_from(inputs: Dict[str, Any]) -> Tuple[Dict, Dict]
         )
 
     based_on = {
-        k: inputs[k].value if isinstance(inputs[k].value, list) else [inputs[k].value]
-        for k in inputs.keys()
+        k: inputs[k].value
+        if isinstance(inputs[k].value, list)
+        else [inputs[k].value]
+        for k in inputs
         if isinstance(inputs[k], _BasedOn)
     }
 
@@ -139,7 +141,7 @@ def prepare_inputs_for_autoembed(inputs: Dict[str, Any]) -> Dict[str, Any]:
 
     next_inputs = inputs.copy()
     for k, v in next_inputs.items():
-        if isinstance(v, _ToSelectFrom) or isinstance(v, _BasedOn):
+        if isinstance(v, (_ToSelectFrom, _BasedOn)):
             if not isinstance(v.value, _Embed):
                 next_inputs[k].value = EmbedAndKeep(v.value)
     return next_inputs
@@ -269,10 +271,9 @@ class AutoSelectionScorer(SelectionScorer[Event], BaseModel):
                 "{rl_chain_selected}".'
         human_message_prompt = HumanMessagePromptTemplate.from_template(human_template)
         default_system_prompt = AutoSelectionScorer.get_default_system_prompt()
-        chat_prompt = ChatPromptTemplate.from_messages(
+        return ChatPromptTemplate.from_messages(
             [default_system_prompt, human_message_prompt]
         )
-        return chat_prompt
 
     @root_validator(pre=True)
     def set_prompt_and_llm_chain(cls, values: Dict[str, Any]) -> Dict[str, Any]:
@@ -281,7 +282,7 @@ class AutoSelectionScorer(SelectionScorer[Event], BaseModel):
         scoring_criteria_template_str = values.get("scoring_criteria_template_str")
         if prompt is None and scoring_criteria_template_str is None:
             prompt = AutoSelectionScorer.get_default_prompt()
-        elif prompt is None and scoring_criteria_template_str is not None:
+        elif prompt is None:
             human_message_prompt = HumanMessagePromptTemplate.from_template(
                 scoring_criteria_template_str
             )
@@ -299,8 +300,7 @@ class AutoSelectionScorer(SelectionScorer[Event], BaseModel):
         ranking = self.llm_chain.predict(llm_response=llm_response, **inputs)
         ranking = ranking.strip()
         try:
-            resp = float(ranking)
-            return resp
+            return float(ranking)
         except Exception as e:
             raise RuntimeError(
                 f"The auto selection scorer did not manage to score the response, there is always the option to try again or tweak the reward prompt. Error: {e}"  # noqa: E501
@@ -455,8 +455,8 @@ class RLChain(Chain, Generic[TEvent]):
     def _validate_inputs(self, inputs: Dict[str, Any]) -> None:
         super()._validate_inputs(inputs)
         if (
-            self.selected_input_key in inputs.keys()
-            or self.selected_based_on_input_key in inputs.keys()
+            self.selected_input_key in inputs
+            or self.selected_based_on_input_key in inputs
         ):
             raise ValueError(
                 f"The rl chain does not accept '{self.selected_input_key}' or '{self.selected_based_on_input_key}' as input keys, they are reserved for internal use during auto reward."  # noqa: E501

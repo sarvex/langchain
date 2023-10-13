@@ -41,8 +41,7 @@ def get_num_tokens(string: str, openai_model_name: str) -> int:
     tiktoken = import_tiktoken()
 
     encoding = tiktoken.encoding_for_model(openai_model_name)
-    num_tokens = len(encoding.encode(string))
-    return num_tokens
+    return len(encoding.encode(string))
 
 
 class InfinoCallbackHandler(BaseCallbackHandler):
@@ -214,10 +213,7 @@ class InfinoCallbackHandler(BaseCallbackHandler):
     ) -> None:
         """Run when LLM starts running."""
 
-        # Currently, for chat models, we only support input prompts for ChatOpenAI.
-        # Check if this model is a ChatOpenAI model.
-        values = serialized.get("id")
-        if values:
+        if values := serialized.get("id"):
             for value in values:
                 if value == "ChatOpenAI":
                     self.is_chat_openai_model = True
@@ -225,10 +221,8 @@ class InfinoCallbackHandler(BaseCallbackHandler):
 
         # Track prompt tokens for ChatOpenAI model.
         if self.is_chat_openai_model:
-            invocation_params = kwargs.get("invocation_params")
-            if invocation_params:
-                model_name = invocation_params.get("model_name")
-                if model_name:
+            if invocation_params := kwargs.get("invocation_params"):
+                if model_name := invocation_params.get("model_name"):
                     self.chat_openai_model_name = model_name
                     prompt_tokens = 0
                     for message_list in messages:

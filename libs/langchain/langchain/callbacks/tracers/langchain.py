@@ -109,7 +109,7 @@ class LangChainTracer(BaseTracer):
         execution_order = self._get_execution_order(parent_run_id_)
         start_time = datetime.utcnow()
         if metadata:
-            kwargs.update({"metadata": metadata})
+            kwargs["metadata"] = metadata
         chat_model_run = Run(
             id=run_id,
             parent_run_id=parent_run_id,

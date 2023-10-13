@@ -75,8 +75,7 @@ def convert_message_to_dict(message: BaseMessage) -> dict:
 def calculate_md5(input_string):
     md5 = hashlib.md5()
     md5.update(input_string.encode('utf-8'))
-    encrypted = md5.hexdigest()
-    return encrypted
+    return md5.hexdigest()
 
 
 class BaichuanChatEndpoint():
@@ -126,14 +125,15 @@ class BaichuanChatEndpoint():
         self.baichuan_ak = baichuan_ak
         self.baichuan_sk = baichuan_sk
         self.model = "Baichuan2-7B" if model is None else model
-        self.streaming = False if streaming is not None and streaming is False else True
+        self.streaming = streaming is None or streaming is not False
 
     def predict(self, messages: List[BaseMessage]) -> Response:
         
-        if self.streaming is not None and self.streaming is False:
-            url = "https://api.baichuan-ai.com/v1/chat"
-        elif self.streaming is not None and self.streaming is True:
-            url = "https://api.baichuan-ai.com/v1/stream/chat"
+        if self.streaming is not None:
+            if self.streaming is False:
+                url = "https://api.baichuan-ai.com/v1/chat"
+            elif self.streaming is True:
+                url = "https://api.baichuan-ai.com/v1/stream/chat"
 
         data = {
             "model": self.model,
@@ -151,11 +151,10 @@ class BaichuanChatEndpoint():
 
         headers = {
             "Content-Type": "application/json",
-            "Authorization": "Bearer " + self.baichuan_ak,
+            "Authorization": f"Bearer {self.baichuan_ak}",
             "X-BC-Request-Id": "your requestId",
             "X-BC-Timestamp": str(time_stamp),
             "X-BC-Signature": signature,
             "X-BC-Sign-Algo": "MD5",
         }
-        response = requests.post(url, data=json_data, headers=headers)
-        return response
+        return requests.post(url, data=json_data, headers=headers)

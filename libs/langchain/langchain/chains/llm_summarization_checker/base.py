@@ -38,7 +38,7 @@ def _load_sequential_chain(
     are_all_true_prompt: PromptTemplate,
     verbose: bool = False,
 ) -> SequentialChain:
-    chain = SequentialChain(
+    return SequentialChain(
         chains=[
             LLMChain(
                 llm=llm,
@@ -69,7 +69,6 @@ def _load_sequential_chain(
         output_variables=["all_true", "revised_summary"],
         verbose=verbose,
     )
-    return chain
 
 
 class LLMSummarizationCheckerChain(Chain):

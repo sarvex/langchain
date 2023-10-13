@@ -60,9 +60,7 @@ def is_name_taken(name: str) -> bool:
     Returns:
         bool: True if name is taken, False otherwise
     """
-    response = _request_pypi(name)
-
-    if response:
+    if response := _request_pypi(name):
         package_url = response.get("info").get("package_url")  # type: ignore
         module_name = package_url.split("/")[-2]
         return name.lower() == module_name.lower()
