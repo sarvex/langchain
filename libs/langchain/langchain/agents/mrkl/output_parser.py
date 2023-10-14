@@ -30,18 +30,17 @@ class MRKLOutputParser(AgentOutputParser):
         )
         action_match = re.search(regex, text, re.DOTALL)
         if action_match and includes_answer:
-            if text.find(FINAL_ANSWER_ACTION) < text.find(action_match.group(0)):
-                # if final answer is before the hallucination, return final answer
-                start_index = text.find(FINAL_ANSWER_ACTION) + len(FINAL_ANSWER_ACTION)
-                end_index = text.find("\n\n", start_index)
-                return AgentFinish(
-                    {"output": text[start_index:end_index].strip()}, text[:end_index]
-                )
-            else:
+            if text.find(FINAL_ANSWER_ACTION) >= text.find(action_match.group(0)):
                 raise OutputParserException(
                     f"{FINAL_ANSWER_AND_PARSABLE_ACTION_ERROR_MESSAGE}: {text}"
                 )
 
+            # if final answer is before the hallucination, return final answer
+            start_index = text.find(FINAL_ANSWER_ACTION) + len(FINAL_ANSWER_ACTION)
+            end_index = text.find("\n\n", start_index)
+            return AgentFinish(
+                {"output": text[start_index:end_index].strip()}, text[:end_index]
+            )
         if action_match:
             action = action_match.group(1).strip()
             action_input = action_match.group(2)

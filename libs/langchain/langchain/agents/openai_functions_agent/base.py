@@ -111,10 +111,9 @@ class OpenAIFunctionsAgent(BaseSingleActionAgent):
                 messages,
                 callbacks=callbacks,
             )
-        agent_decision = OpenAIFunctionsAgentOutputParser._parse_ai_message(
+        return OpenAIFunctionsAgentOutputParser._parse_ai_message(
             predicted_message
         )
-        return agent_decision
 
     async def aplan(
         self,
@@ -142,10 +141,9 @@ class OpenAIFunctionsAgent(BaseSingleActionAgent):
         predicted_message = await self.llm.apredict_messages(
             messages, functions=self.functions, callbacks=callbacks
         )
-        agent_decision = OpenAIFunctionsAgentOutputParser._parse_ai_message(
+        return OpenAIFunctionsAgentOutputParser._parse_ai_message(
             predicted_message
         )
-        return agent_decision
 
     def return_stopped_response(
         self,
@@ -197,11 +195,7 @@ class OpenAIFunctionsAgent(BaseSingleActionAgent):
         """
         _prompts = extra_prompt_messages or []
         messages: List[Union[BaseMessagePromptTemplate, BaseMessage]]
-        if system_message:
-            messages = [system_message]
-        else:
-            messages = []
-
+        messages = [system_message] if system_message else []
         messages.extend(
             [
                 *_prompts,

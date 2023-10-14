@@ -46,8 +46,9 @@ class LangSmithRunChatLoader(BaseChatLoader):
         :return: A chat session representing the run's data.
         """
         chat_session = LangSmithRunChatLoader._get_messages_from_llm_run(llm_run)
-        functions = LangSmithRunChatLoader._get_functions_from_llm_run(llm_run)
-        if functions:
+        if functions := LangSmithRunChatLoader._get_functions_from_llm_run(
+            llm_run
+        ):
             chat_session["functions"] = functions
         return chat_session
 
@@ -92,12 +93,8 @@ class LangSmithRunChatLoader(BaseChatLoader):
         """
         for run_obj in self.runs:
             try:
-                if hasattr(run_obj, "id"):
-                    run = run_obj
-                else:
-                    run = self.client.read_run(run_obj)
-                session = self._load_single_chat_session(run)
-                yield session
+                run = run_obj if hasattr(run_obj, "id") else self.client.read_run(run_obj)
+                yield self._load_single_chat_session(run)
             except ValueError as e:
                 logger.warning(f"Could not load run {run_obj}: {repr(e)}")
                 continue

@@ -24,19 +24,19 @@ def _add_newlines_before_ha(input_text: str) -> str:
     new_text = input_text
     for word in ["Human:", "Assistant:"]:
         new_text = new_text.replace(word, "\n\n" + word)
-        for i in range(2):
+        for _ in range(2):
             new_text = new_text.replace("\n\n\n" + word, "\n\n" + word)
     return new_text
 
 
 def _human_assistant_format(input_text: str) -> str:
-    if input_text.count("Human:") == 0 or (
+    if "Human:" not in input_text or (
         input_text.find("Human:") > input_text.find("Assistant:")
         and "Assistant:" in input_text
     ):
-        input_text = HUMAN_PROMPT + " " + input_text  # SILENT CORRECTION
-    if input_text.count("Assistant:") == 0:
-        input_text = input_text + ASSISTANT_PROMPT  # SILENT CORRECTION
+        input_text = f"{HUMAN_PROMPT} {input_text}"
+    if "Assistant:" not in input_text:
+        input_text += ASSISTANT_PROMPT
     if input_text[: len("Human:")] == "Human:":
         input_text = "\n\n" + input_text
     input_text = _add_newlines_before_ha(input_text)
@@ -47,12 +47,12 @@ def _human_assistant_format(input_text: str) -> str:
             if count % 2 == 0:
                 count += 1
             else:
-                warnings.warn(ALTERNATION_ERROR + f" Received {input_text}")
+                warnings.warn(f"{ALTERNATION_ERROR} Received {input_text}")
         if input_text[i : i + len(ASSISTANT_PROMPT)] == ASSISTANT_PROMPT:
             if count % 2 == 1:
                 count += 1
             else:
-                warnings.warn(ALTERNATION_ERROR + f" Received {input_text}")
+                warnings.warn(f"{ALTERNATION_ERROR} Received {input_text}")
 
     if count % 2 == 1:  # Only saw Human, no Assistant
         input_text = input_text + ASSISTANT_PROMPT  # SILENT CORRECTION
@@ -80,7 +80,7 @@ class LLMInputOutputAdapter:
         input_body = {**model_kwargs}
         if provider == "anthropic":
             input_body["prompt"] = _human_assistant_format(prompt)
-        elif provider == "ai21" or provider == "cohere":
+        elif provider in {"ai21", "cohere"}:
             input_body["prompt"] = prompt
         elif provider == "amazon":
             input_body = dict()
@@ -124,8 +124,7 @@ class LLMInputOutputAdapter:
             )
 
         for event in stream:
-            chunk = event.get("chunk")
-            if chunk:
+            if chunk := event.get("chunk"):
                 chunk_obj = json.loads(chunk.get("bytes").decode())
                 if provider == "cohere" and (
                     chunk_obj["is_finished"]
@@ -393,13 +392,12 @@ class Bedrock(LLM, BedrockBase):
         """
 
         if self.streaming:
-            completion = ""
-            for chunk in self._stream(
-                prompt=prompt, stop=stop, run_manager=run_manager, **kwargs
-            ):
-                completion += chunk.text
-            return completion
-
+            return "".join(
+                chunk.text
+                for chunk in self._stream(
+                    prompt=prompt, stop=stop, run_manager=run_manager, **kwargs
+                )
+            )
         return self._prepare_input_and_invoke(prompt=prompt, stop=stop, **kwargs)
 
     def get_num_tokens(self, text: str) -> int:

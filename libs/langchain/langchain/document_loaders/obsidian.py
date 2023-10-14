@@ -58,13 +58,10 @@ class ObsidianLoader(BaseLoader):
 
     def _to_langchain_compatible_metadata(self, metadata: dict) -> dict:
         """Convert a dictionary to a compatible with langchain."""
-        result = {}
-        for key, value in metadata.items():
-            if type(value) in {str, int, float}:
-                result[key] = value
-            else:
-                result[key] = str(value)
-        return result
+        return {
+            key: value if type(value) in {str, int, float} else str(value)
+            for key, value in metadata.items()
+        }
 
     def _parse_document_tags(self, content: str) -> set:
         """Return a set of all tags in within the document."""
@@ -72,10 +69,7 @@ class ObsidianLoader(BaseLoader):
             return set()
 
         match = self.TAG_REGEX.findall(content)
-        if not match:
-            return set()
-
-        return {tag for tag in match}
+        return set() if not match else set(match)
 
     def _parse_dataview_fields(self, content: str) -> dict:
         """Parse obsidian dataview plugin fields from the content and return it

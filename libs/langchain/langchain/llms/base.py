@@ -120,7 +120,7 @@ def get_prompts(
     params: Dict[str, Any], prompts: List[str]
 ) -> Tuple[Dict[int, List], str, List[int], List[str]]:
     """Get prompts that are already cached."""
-    llm_string = str(sorted([(k, v) for k, v in params.items()]))
+    llm_string = str(sorted(list(params.items())))
     missing_prompts = []
     missing_prompt_idxs = []
     existing_prompts = {}
@@ -189,10 +189,7 @@ class BaseLLM(BaseLanguageModel[str], ABC):
 
         This allows users to pass in None as verbose to access the global setting.
         """
-        if verbose is None:
-            return _get_verbosity()
-        else:
-            return verbose
+        return _get_verbosity() if verbose is None else verbose
 
     # --- Runnable methods ---
 
@@ -641,10 +638,9 @@ class BaseLLM(BaseLanguageModel[str], ABC):
                     callback_managers, prompts, run_name_list
                 )
             ]
-            output = self._generate_helper(
+            return self._generate_helper(
                 prompts, stop, run_managers, bool(new_arg_supported), **kwargs
             )
-            return output
         if len(missing_prompts) > 0:
             run_managers = [
                 callback_managers[idx].on_llm_start(
@@ -808,10 +804,9 @@ class BaseLLM(BaseLanguageModel[str], ABC):
                 ]
             )
             run_managers = [r[0] for r in run_managers]
-            output = await self._agenerate_helper(
+            return await self._agenerate_helper(
                 prompts, stop, run_managers, bool(new_arg_supported), **kwargs
             )
-            return output
         if len(missing_prompts) > 0:
             run_managers = await asyncio.gather(
                 *[
@@ -897,10 +892,7 @@ class BaseLLM(BaseLanguageModel[str], ABC):
     def predict(
         self, text: str, *, stop: Optional[Sequence[str]] = None, **kwargs: Any
     ) -> str:
-        if stop is None:
-            _stop = None
-        else:
-            _stop = list(stop)
+        _stop = None if stop is None else list(stop)
         return self(text, stop=_stop, **kwargs)
 
     def predict_messages(
@@ -911,20 +903,14 @@ class BaseLLM(BaseLanguageModel[str], ABC):
         **kwargs: Any,
     ) -> BaseMessage:
         text = get_buffer_string(messages)
-        if stop is None:
-            _stop = None
-        else:
-            _stop = list(stop)
+        _stop = None if stop is None else list(stop)
         content = self(text, stop=_stop, **kwargs)
         return AIMessage(content=content)
 
     async def apredict(
         self, text: str, *, stop: Optional[Sequence[str]] = None, **kwargs: Any
     ) -> str:
-        if stop is None:
-            _stop = None
-        else:
-            _stop = list(stop)
+        _stop = None if stop is None else list(stop)
         return await self._call_async(text, stop=_stop, **kwargs)
 
     async def apredict_messages(
@@ -935,10 +921,7 @@ class BaseLLM(BaseLanguageModel[str], ABC):
         **kwargs: Any,
     ) -> BaseMessage:
         text = get_buffer_string(messages)
-        if stop is None:
-            _stop = None
-        else:
-            _stop = list(stop)
+        _stop = None if stop is None else list(stop)
         content = await self._call_async(text, stop=_stop, **kwargs)
         return AIMessage(content=content)
 
@@ -975,11 +958,7 @@ class BaseLLM(BaseLanguageModel[str], ABC):
             llm.save(file_path="path/llm.yaml")
         """
         # Convert file to Path object.
-        if isinstance(file_path, str):
-            save_path = Path(file_path)
-        else:
-            save_path = file_path
-
+        save_path = Path(file_path) if isinstance(file_path, str) else file_path
         directory_path = save_path.parent
         directory_path.mkdir(parents=True, exist_ok=True)
 

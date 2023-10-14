@@ -78,10 +78,7 @@ def _parse_input(raw_input: Any) -> Any:
         return inputs_value
     if question_value:
         return question_value
-    if query_value:
-        return query_value
-
-    return _serialize(raw_input)
+    return query_value if query_value else _serialize(raw_input)
 
 
 def _parse_output(raw_output: dict) -> Any:
@@ -105,10 +102,7 @@ def _parse_output(raw_output: dict) -> Any:
         return output_value
     if output_text_value:
         return output_text_value
-    if result_value:
-        return result_value
-
-    return _serialize(raw_output)
+    return result_value if result_value else _serialize(raw_output)
 
 
 def _parse_lc_role(
@@ -422,7 +416,7 @@ class LLMonitorCallbackHandler(BaseCallbackHandler):
             if agentName is not None:
                 type = "agent"
                 name = agentName
-            if name == "AgentExecutor" or name == "PlanAndExecute":
+            if name in ["AgentExecutor", "PlanAndExecute"]:
                 type = "agent"
 
             if parent_run_id is not None:

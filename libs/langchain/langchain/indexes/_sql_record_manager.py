@@ -406,7 +406,7 @@ class SQLRecordManager(RecordManager):
                 )
                 .all()
             )
-        found_keys = set(r.key for r in records)
+        found_keys = {r.key for r in records}
         return [k in found_keys for k in keys]
 
     async def aexists(self, keys: Sequence[str]) -> List[bool]:

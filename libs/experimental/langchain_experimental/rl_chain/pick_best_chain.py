@@ -73,17 +73,15 @@ class PickBestFeatureEmbedder(base.Embedder[PickBestEvent]):
 
     def get_label(self, event: PickBestEvent) -> tuple:
         cost = None
-        if event.selected:
-            chosen_action = event.selected.index
-            cost = (
-                -1.0 * event.selected.score
-                if event.selected.score is not None
-                else None
-            )
-            prob = event.selected.probability
-            return chosen_action, cost, prob
-        else:
+        if not event.selected:
             return None, None, None
+        chosen_action = event.selected.index
+        cost = (
+            -1.0 * event.selected.score
+            if event.selected.score is not None
+            else None
+        )
+        return chosen_action, cost, event.selected.probability
 
     def get_context_and_action_embeddings(self, event: PickBestEvent) -> tuple:
         context_emb = base.embed(event.based_on, self.model) if event.based_on else None
@@ -138,13 +136,13 @@ class PickBestFeatureEmbedder(base.Embedder[PickBestEvent]):
         context_matrix = np.stack([v for k, v in context_embeddings.items()])
         dot_product_matrix = np.dot(context_matrix, action_matrix.T)
 
-        indexed_dot_product: Dict = {}
-
-        for i, context_key in enumerate(context_embeddings.keys()):
-            indexed_dot_product[context_key] = {}
-            for j, action_key in enumerate(action_embeddings.keys()):
-                indexed_dot_product[context_key][action_key] = dot_product_matrix[i, j]
-
+        indexed_dot_product: Dict = {
+            context_key: {
+                action_key: dot_product_matrix[i, j]
+                for j, action_key in enumerate(action_embeddings.keys())
+            }
+            for i, context_key in enumerate(context_embeddings.keys())
+        }
         return indexed_dot_product
 
     def format_auto_embed_on(self, event: PickBestEvent) -> str:
@@ -166,8 +164,7 @@ class PickBestFeatureEmbedder(base.Embedder[PickBestEvent]):
                     line_parts.append(f"{elem}")
                     ns_a = f"{ns}={elem}"
                     nsa.append(ns_a)
-                    for k, v in indexed_dot_product.items():
-                        dot_prods.append(v[ns_a])
+                    dot_prods.extend(v[ns_a] for k, v in indexed_dot_product.items())
                 nsa_str = " ".join(nsa)
                 line_parts.append(f"|# {nsa_str}")
 
@@ -195,8 +192,7 @@ class PickBestFeatureEmbedder(base.Embedder[PickBestEvent]):
         chosen_action, cost, prob = self.get_label(event)
         context_emb, action_embs = self.get_context_and_action_embeddings(event)
 
-        example_string = ""
-        example_string += "shared "
+        example_string = "" + "shared "
         for context_item in context_emb:
             for ns, based_on in context_item.items():
                 e = " ".join(based_on) if isinstance(based_on, list) else based_on
@@ -328,8 +324,7 @@ class PickBest(base.RLChain[PickBestEvent]):
                 "No variables using 'BasedOn' found in the inputs. Please include at least one variable containing information to base the selected of ToSelectFrom on."  # noqa E501
             )
 
-        event = PickBestEvent(inputs=inputs, to_select_from=actions, based_on=context)
-        return event
+        return PickBestEvent(inputs=inputs, to_select_from=actions, based_on=context)
 
     def _call_after_predict_before_llm(
         self,
@@ -352,7 +347,7 @@ class PickBest(base.RLChain[PickBestEvent]):
         # only one key, value pair in event.to_select_from
         key, value = next(iter(event.to_select_from.items()))
         next_chain_inputs = inputs.copy()
-        next_chain_inputs.update({key: value[event.selected.index]})
+        next_chain_inputs[key] = value[event.selected.index]
         return next_chain_inputs, event
 
     def _call_after_llm_before_scoring(

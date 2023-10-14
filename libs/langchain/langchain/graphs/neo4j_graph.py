@@ -109,13 +109,13 @@ class Neo4jGraph:
         """
         Take GraphDocument as input as uses it to construct a graph.
         """
+        include_docs_query = (
+            "CREATE (d:Document) "
+            "SET d.text = $document.page_content "
+            "SET d += $document.metadata "
+            "WITH d "
+        )
         for document in graph_documents:
-            include_docs_query = (
-                "CREATE (d:Document) "
-                "SET d.text = $document.page_content "
-                "SET d += $document.metadata "
-                "WITH d "
-            )
             # Import nodes
             self.query(
                 (

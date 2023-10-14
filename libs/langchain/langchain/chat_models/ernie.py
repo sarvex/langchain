@@ -169,12 +169,11 @@ class ErnieBotChat(BaseChatModel):
         logger.debug(f"Payload for ernie api is {payload}")
         resp = self._chat(payload)
         if resp.get("error_code"):
-            if resp.get("error_code") == 111:
-                logger.debug("access_token expired, refresh it")
-                self._refresh_access_token_with_lock()
-                resp = self._chat(payload)
-            else:
+            if resp.get("error_code") != 111:
                 raise ValueError(f"Error from ErnieChat api response: {resp}")
+            logger.debug("access_token expired, refresh it")
+            self._refresh_access_token_with_lock()
+            resp = self._chat(payload)
         return self._create_chat_result(resp)
 
     def _create_chat_result(self, response: Mapping[str, Any]) -> ChatResult:

@@ -39,9 +39,7 @@ class OpenAIFunctionsAgentOutputParser(AgentOutputParser):
         if not isinstance(message, AIMessage):
             raise TypeError(f"Expected an AI message got {type(message)}")
 
-        function_call = message.additional_kwargs.get("function_call", {})
-
-        if function_call:
+        if function_call := message.additional_kwargs.get("function_call", {}):
             function_name = function_call["name"]
             try:
                 _tool_input = json.loads(function_call["arguments"])
@@ -57,11 +55,7 @@ class OpenAIFunctionsAgentOutputParser(AgentOutputParser):
             # schema and expect a single string argument as an input.
             # We unpack the argument here if it exists.
             # Open AI does not support passing in a JSON array as an argument.
-            if "__arg1" in _tool_input:
-                tool_input = _tool_input["__arg1"]
-            else:
-                tool_input = _tool_input
-
+            tool_input = _tool_input["__arg1"] if "__arg1" in _tool_input else _tool_input
             content_msg = f"responded: {message.content}\n" if message.content else "\n"
             log = f"\nInvoking: `{function_name}` with `{tool_input}`\n{content_msg}\n"
             return AgentActionMessageLog(

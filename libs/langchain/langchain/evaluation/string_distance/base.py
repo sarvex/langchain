@@ -131,10 +131,7 @@ class _RapidFuzzChainMixin(Chain):
                 f"\nMust be one of: {list(StringDistance)}"
             )
         module = module_map[distance]
-        if normalize_score:
-            return module.normalized_distance
-        else:
-            return module.distance
+        return module.normalized_distance if normalize_score else module.distance
 
     @property
     def metric(self) -> Callable:

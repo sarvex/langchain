@@ -111,7 +111,7 @@ class Arcee(LLM):
 
             # validate size
             if kw.get("size") is not None:
-                if not kw.get("size") >= 0:
+                if kw.get("size") < 0:
                     raise ValueError("`size` must be positive")
 
             # validate filters

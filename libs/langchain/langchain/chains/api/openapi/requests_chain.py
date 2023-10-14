@@ -23,11 +23,9 @@ class APIRequesterOutputParser(BaseOutputParser):
     def parse(self, llm_output: str) -> str:
         """Parse the request and error tags."""
 
-        json_match = re.search(r"```json(.*?)```", llm_output, re.DOTALL)
-        if json_match:
+        if json_match := re.search(r"```json(.*?)```", llm_output, re.DOTALL):
             return self._load_json_block(json_match.group(1).strip())
-        message_match = re.search(r"```text(.*?)```", llm_output, re.DOTALL)
-        if message_match:
+        if message_match := re.search(r"```text(.*?)```", llm_output, re.DOTALL):
             return f"MESSAGE: {message_match.group(1).strip()}"
         return "ERROR making request"
 

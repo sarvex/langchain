@@ -70,11 +70,13 @@ class JavelinAIGatewayEmbeddings(Embeddings, BaseModel):
                 resp_dict = resp.dict()
 
                 embeddings_chunk = resp_dict.get("llm_response", {}).get("data", [])
-                for item in embeddings_chunk:
-                    if "embedding" in item:
-                        embeddings.append(item["embedding"])
+                embeddings.extend(
+                    item["embedding"]
+                    for item in embeddings_chunk
+                    if "embedding" in item
+                )
             except ValueError as e:
-                print("Failed to query route: " + str(e))
+                print(f"Failed to query route: {str(e)}")
 
         return embeddings
 
@@ -88,11 +90,13 @@ class JavelinAIGatewayEmbeddings(Embeddings, BaseModel):
                 resp_dict = resp.dict()
 
                 embeddings_chunk = resp_dict.get("llm_response", {}).get("data", [])
-                for item in embeddings_chunk:
-                    if "embedding" in item:
-                        embeddings.append(item["embedding"])
+                embeddings.extend(
+                    item["embedding"]
+                    for item in embeddings_chunk
+                    if "embedding" in item
+                )
             except ValueError as e:
-                print("Failed to query route: " + str(e))
+                print(f"Failed to query route: {str(e)}")
 
         return embeddings
 

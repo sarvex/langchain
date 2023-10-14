@@ -85,8 +85,8 @@ class ComprehendToxicity:
         # validate max. sentence size based on Service limits
         nltk = self._toxicity_init_validate(max_size)
         sentences = nltk.sent_tokenize(prompt_value)
-        chunks = list()  # type: ignore
-        current_chunk = list()  # type: ignore
+        chunks = []
+        current_chunk = []
         current_size = 0
 
         for sentence in sentences:
@@ -136,15 +136,9 @@ class ComprehendToxicity:
             threshold = config.get("threshold")
             toxicity_labels = config.get("labels")
 
-            if not toxicity_labels:
-                for item in response["ResultList"]:
-                    for label in item["Labels"]:
-                        if label["Score"] >= threshold:
-                            toxicity_found = True
-                            break
-            else:
-                for item in response["ResultList"]:
-                    for label in item["Labels"]:
+            for item in response["ResultList"]:
+                for label in item["Labels"]:
+                    if toxicity_labels:
                         if (
                             label["Name"] in toxicity_labels
                             and label["Score"] >= threshold
@@ -152,6 +146,9 @@ class ComprehendToxicity:
                             toxicity_found = True
                             break
 
+                    elif label["Score"] >= threshold:
+                        toxicity_found = True
+                        break
             if self.callback and self.callback.toxicity_callback:
                 if toxicity_found:
                     self.moderation_beacon["moderation_status"] = "LABELS_FOUND"

@@ -71,19 +71,18 @@ class IMessageChatLoader(BaseChatLoader):
         cursor.execute(query, (chat_id,))
         messages = cursor.fetchall()
 
-        for date, sender, text in messages:
-            if text:  # Skip empty messages
-                results.append(
-                    HumanMessage(
-                        role=sender,
-                        content=text,
-                        additional_kwargs={
-                            "message_time": date,
-                            "sender": sender,
-                        },
-                    )
-                )
-
+        results.extend(
+            HumanMessage(
+                role=sender,
+                content=text,
+                additional_kwargs={
+                    "message_time": date,
+                    "sender": sender,
+                },
+            )
+            for date, sender, text in messages
+            if text
+        )
         return ChatSession(messages=results)
 
     def lazy_load(self) -> Iterator[ChatSession]:

@@ -31,6 +31,7 @@ date that is similar to the date when the file was actually last modified,
 assuming the actual modification date and its commit date are close.
 """
 
+
 # TODO:
 # - Add -z on git whatchanged/ls-files, so we don't deal with filename decoding
 # - When Python is bumped to 3.7, use text instead of universal_newlines on subprocess
@@ -66,7 +67,7 @@ assuming the actual modification date and its commit date are close.
 #   `--accurate` mode for `--cc`?
 
 if __name__ != "__main__":
-    raise ImportError("{} should not be used as a module.".format(__name__))
+    raise ImportError(f"{__name__} should not be used as a module.")
 
 import argparse
 import datetime
@@ -81,7 +82,7 @@ import time
 __version__ = "2022.12+dev"
 
 # Update symlinks only if the platform supports not following them
-UPDATE_SYMLINKS = bool(os.utime in getattr(os, 'supports_follow_symlinks', []))
+UPDATE_SYMLINKS = os.utime in getattr(os, 'supports_follow_symlinks', [])
 
 # Call os.path.normpath() only if not in a POSIX platform (Windows)
 NORMALIZE_PATHS = (os.path.sep != '/')
@@ -326,7 +327,7 @@ class Git:
 
     def log(self, merge=False, first_parent=False, commit_time=False,
             reverse_order=False, paths: list = None):
-        cmd = 'whatchanged --pretty={}'.format('%ct' if commit_time else '%at')
+        cmd = f"whatchanged --pretty={'%ct' if commit_time else '%at'}"
         if merge:         cmd += ' -m'
         if first_parent:  cmd += ' --first-parent'
         if reverse_order: cmd += ' --reverse'
@@ -524,7 +525,7 @@ def main():
             filelist -= dirty
 
     # Build dir list to be processed
-    dirlist = set(os.path.dirname(_) for _ in filelist) if args.dirs else set()
+    dirlist = {os.path.dirname(_) for _ in filelist} if args.dirs else set()
 
     stats['totalfiles'] = stats['files'] = len(filelist)
     log.info("{0:,} files to be processed in work dir".format(stats['totalfiles']))

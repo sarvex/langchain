@@ -363,7 +363,7 @@ class ClearMLCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
                 doc, style="dep", jupyter=False, page=True
             )
             dep_output_path = Path(
-                self.temp_dir.name, hash_string(f"dep-{text}") + ".html"
+                self.temp_dir.name, f'{hash_string(f"dep-{text}")}.html'
             )
             dep_output_path.open("w", encoding="utf-8").write(dep_out)
 
@@ -371,7 +371,7 @@ class ClearMLCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
                 doc, style="ent", jupyter=False, page=True
             )
             ent_output_path = Path(
-                self.temp_dir.name, hash_string(f"ent-{text}") + ".html"
+                self.temp_dir.name, f'{hash_string(f"ent-{text}")}.html'
             )
             ent_output_path.open("w", encoding="utf-8").write(ent_out)
 
@@ -444,8 +444,7 @@ class ClearMLCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
             + visualizations_columns,
             {"step": "output_step", "text": "output"},
         )
-        session_analysis_df = pd.concat([llm_input_prompts_df, llm_outputs_df], axis=1)
-        return session_analysis_df
+        return pd.concat([llm_input_prompts_df, llm_outputs_df], axis=1)
 
     def flush_tracker(
         self,
@@ -513,8 +512,6 @@ class ClearMLCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
             except NotImplementedError as e:
                 print("Could not save model.")
                 print(repr(e))
-                pass
-
         # Cleanup after adding everything to ClearML
         self.task.flush(wait_for_uploads=True)
         self.temp_dir.cleanup()

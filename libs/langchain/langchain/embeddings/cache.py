@@ -112,9 +112,7 @@ class CacheBackedEmbeddings(Embeddings):
         missing_indices: List[int] = [
             i for i, vector in enumerate(vectors) if vector is None
         ]
-        missing_texts = [texts[i] for i in missing_indices]
-
-        if missing_texts:
+        if missing_texts := [texts[i] for i in missing_indices]:
             missing_vectors = self.underlying_embeddings.embed_documents(missing_texts)
             self.document_embedding_store.mset(
                 list(zip(missing_texts, missing_vectors))

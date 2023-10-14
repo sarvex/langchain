@@ -94,7 +94,7 @@ class BashProcess:
             "env", ["-i", "bash", "--norc", "--noprofile"], encoding="utf-8"
         )
         # Set the custom prompt
-        process.sendline("PS1=" + prompt)
+        process.sendline(f"PS1={prompt}")
 
         process.expect_exact(prompt, timeout=10)
         return process
@@ -135,9 +135,7 @@ class BashProcess:
                 stderr=subprocess.STDOUT,
             ).stdout.decode()
         except subprocess.CalledProcessError as error:
-            if self.return_err_output:
-                return error.stdout.decode()
-            return str(error)
+            return error.stdout.decode() if self.return_err_output else str(error)
         if self.strip_newlines:
             output = output.strip()
         return output
@@ -179,6 +177,4 @@ class BashProcess:
             return f"Exited with error status: {self.process.exitstatus}"
         output = self.process.before
         output = self.process_output(output, command)
-        if self.strip_newlines:
-            return output.strip()
-        return output
+        return output.strip() if self.strip_newlines else output

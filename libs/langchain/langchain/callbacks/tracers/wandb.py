@@ -57,8 +57,7 @@ class RunProcessor:
         :return: The converted W&B Trace Span.
         """
         try:
-            span = self._convert_lc_run_to_wb_span(run)
-            return span
+            return self._convert_lc_run_to_wb_span(run)
         except Exception as e:
             if PRINT_WARNINGS:
                 self.wandb.termwarn(
@@ -194,8 +193,7 @@ class RunProcessor:
             processed = self.modify_serialized_iterative(
                 processed, exact_keys=exact_keys, partial_keys=partial_keys
             )
-            output = self.build_tree(processed)
-            return output
+            return self.build_tree(processed)
         except Exception as e:
             if PRINT_WARNINGS:
                 self.wandb.termwarn(f"WARNING: Failed to serialize model: {e}")
@@ -279,7 +277,7 @@ class RunProcessor:
                     k: v
                     for k, v in obj.items()
                     if k not in exact_keys
-                    and not any(partial in k for partial in partial_keys)
+                    and all(partial not in k for partial in partial_keys)
                 }
                 for k, v in obj.items():
                     obj[k] = remove_exact_and_partial_keys(v)
@@ -375,11 +373,11 @@ class RunProcessor:
                 next(iter(id_to_data[child_id]))
             ] = id_to_data[child_id][next(iter(id_to_data[child_id]))]
 
-        root_dict = next(
-            data for id_val, data in id_to_data.items() if id_val not in child_to_parent
+        return next(
+            data
+            for id_val, data in id_to_data.items()
+            if id_val not in child_to_parent
         )
-
-        return root_dict
 
 
 class WandbRunArgs(TypedDict):

@@ -229,9 +229,10 @@ class QianfanChatEndpoint(BaseChatModel):
                 response = qianfan_model("Tell me a joke.")
         """
         if self.streaming:
-            completion = ""
-            for chunk in self._stream(messages, stop, run_manager, **kwargs):
-                completion += chunk.text
+            completion = "".join(
+                chunk.text
+                for chunk in self._stream(messages, stop, run_manager, **kwargs)
+            )
             lc_msg = AIMessage(content=completion, additional_kwargs={})
             gen = ChatGeneration(
                 message=lc_msg,
@@ -277,12 +278,11 @@ class QianfanChatEndpoint(BaseChatModel):
         params = self._convert_prompt_msg_params(messages, **kwargs)
         response_payload = await self.client.ado(**params)
         lc_msg = AIMessage(content=response_payload["result"], additional_kwargs={})
-        generations = []
         gen = ChatGeneration(
             message=lc_msg,
             generation_info=dict(finish_reason="stop"),
         )
-        generations.append(gen)
+        generations = [gen]
         token_usage = response_payload.get("usage", {})
         llm_output = {"token_usage": token_usage, "model_name": self.model}
         return ChatResult(generations=generations, llm_output=llm_output)

@@ -115,10 +115,10 @@ def _batch(size: int, iterable: Iterable[T]) -> Iterator[List[T]]:
     """Utility batching function."""
     it = iter(iterable)
     while True:
-        chunk = list(islice(it, size))
-        if not chunk:
+        if chunk := list(islice(it, size)):
+            yield chunk
+        else:
             return
-        yield chunk
 
 
 async def _abatch(size: int, iterable: AsyncIterable[T]) -> AsyncIterator[List[T]]:
@@ -338,10 +338,9 @@ def index(
 
             _source_ids = cast(Sequence[str], source_ids)
 
-            uids_to_delete = record_manager.list_keys(
+            if uids_to_delete := record_manager.list_keys(
                 group_ids=_source_ids, before=index_start_dt
-            )
-            if uids_to_delete:
+            ):
                 # Then delete from vector store.
                 vector_store.delete(uids_to_delete)
                 # First delete from record store.

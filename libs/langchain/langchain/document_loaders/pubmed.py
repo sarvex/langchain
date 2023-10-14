@@ -35,5 +35,4 @@ class PubMedLoader(BaseLoader):
         return list(self._client.lazy_load_docs(self.query))
 
     def lazy_load(self) -> Iterator[Document]:
-        for doc in self._client.lazy_load_docs(self.query):
-            yield doc
+        yield from self._client.lazy_load_docs(self.query)

@@ -450,7 +450,7 @@ class AmazonTextractPDFParser(BaseBlobParser):
         current_text = ""
         current_page = 1
         for block in textract_response_json["Blocks"]:
-            if "Page" in block and not (int(block["Page"]) == current_page):
+            if "Page" in block and int(block["Page"]) != current_page:
                 yield Document(
                     page_content=current_text,
                     metadata={"source": blob.source, "page": current_page},
@@ -478,14 +478,13 @@ class DocumentIntelligenceParser(BaseBlobParser):
         for p in result.pages:
             content = " ".join([line.content for line in p.lines])
 
-            d = Document(
+            yield Document(
                 page_content=content,
                 metadata={
                     "source": blob.source,
                     "page": p.page_number,
                 },
             )
-            yield d
 
     def lazy_parse(self, blob: Blob) -> Iterator[Document]:
         """Lazily parse the blob."""
@@ -494,6 +493,4 @@ class DocumentIntelligenceParser(BaseBlobParser):
             poller = self.client.begin_analyze_document(self.model, file_obj)
             result = poller.result()
 
-            docs = self._generate_docs(blob, result)
-
-            yield from docs
+            yield from self._generate_docs(blob, result)

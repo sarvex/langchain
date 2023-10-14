@@ -75,14 +75,11 @@ class NIBittensorLLM(LLM):
 
         default_prompt = "You are an assistant which is created by Neural Internet(NI) \
             in decentralized network named as a Bittensor."
-        if self.system_prompt is None:
-            system_prompt = (
-                default_prompt
-                + " Your task is to provide accurate response based on user prompt"
-            )
-        else:
-            system_prompt = default_prompt + str(self.system_prompt)
-
+        system_prompt = (
+            f"{default_prompt} Your task is to provide accurate response based on user prompt"
+            if self.system_prompt is None
+            else default_prompt + str(self.system_prompt)
+        )
         # Retrieving API KEY to pass into header of each request
         conn.request("GET", "/admin/api-keys/")
         api_key_response = conn.getresponse()

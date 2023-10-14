@@ -159,10 +159,10 @@ class QianfanLLMEndpoint(LLM):
                 response = qianfan_model("Tell me a joke.")
         """
         if self.streaming:
-            completion = ""
-            for chunk in self._stream(prompt, stop, run_manager, **kwargs):
-                completion += chunk.text
-            return completion
+            return "".join(
+                chunk.text
+                for chunk in self._stream(prompt, stop, run_manager, **kwargs)
+            )
         params = self._convert_prompt_msg_params(prompt, **kwargs)
         response_payload = self.client.do(**params)
 

@@ -111,7 +111,7 @@ class FallacyChain(Chain):
         input_prompt = self.chain.prompt.format(**inputs)
 
         _run_manager.on_text(
-            text="Initial response: " + response + "\n\n",
+            text=f"Initial response: {response}" + "\n\n",
             verbose=self.verbose,
             color="yellow",
         )
@@ -152,13 +152,13 @@ class FallacyChain(Chain):
             )
 
             _run_manager.on_text(
-                text="Logical Fallacy: " + fallacy_critique + "\n\n",
+                text=f"Logical Fallacy: {fallacy_critique}" + "\n\n",
                 verbose=self.verbose,
                 color="blue",
             )
 
             _run_manager.on_text(
-                text="Updated response: " + fallacy_revision + "\n\n",
+                text=f"Updated response: {fallacy_revision}" + "\n\n",
                 verbose=self.verbose,
                 color="yellow",
             )

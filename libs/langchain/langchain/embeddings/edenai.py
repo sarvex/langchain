@@ -77,13 +77,7 @@ class EdenAiEmbeddings(BaseModel, Embeddings):
             err_msg = provider_response.get("error", {}).get("message")
             raise Exception(err_msg)
 
-        embeddings = []
-        for embed_item in temp[self.provider]["items"]:
-            embedding = embed_item["embedding"]
-
-            embeddings.append(embedding)
-
-        return embeddings
+        return [embed_item["embedding"] for embed_item in temp[self.provider]["items"]]
 
     def embed_documents(self, texts: List[str]) -> List[List[float]]:
         """Embed a list of documents using EdenAI.

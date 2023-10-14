@@ -197,9 +197,7 @@ class ChatLiteLLM(BaseChatModel):
     @property
     def _default_params(self) -> Dict[str, Any]:
         """Get the default parameters for calling OpenAI API."""
-        set_model_value = self.model
-        if self.model_name is not None:
-            set_model_value = self.model_name
+        set_model_value = self.model if self.model_name is None else self.model_name
         return {
             "model": set_model_value,
             "force_timeout": self.request_timeout,
@@ -214,9 +212,7 @@ class ChatLiteLLM(BaseChatModel):
     @property
     def _client_params(self) -> Dict[str, Any]:
         """Get the parameters used for the openai client."""
-        set_model_value = self.model
-        if self.model_name is not None:
-            set_model_value = self.model_name
+        set_model_value = self.model if self.model_name is None else self.model_name
         self.client.api_base = self.api_base
         self.client.organization = self.organization
         creds: Dict[str, Any] = {
@@ -317,9 +313,7 @@ class ChatLiteLLM(BaseChatModel):
             )
             generations.append(gen)
         token_usage = response.get("usage", {})
-        set_model_value = self.model
-        if self.model_name is not None:
-            set_model_value = self.model_name
+        set_model_value = self.model if self.model_name is None else self.model_name
         llm_output = {"token_usage": token_usage, "model": set_model_value}
         return ChatResult(generations=generations, llm_output=llm_output)
 
@@ -405,9 +399,7 @@ class ChatLiteLLM(BaseChatModel):
     @property
     def _identifying_params(self) -> Dict[str, Any]:
         """Get the identifying parameters."""
-        set_model_value = self.model
-        if self.model_name is not None:
-            set_model_value = self.model_name
+        set_model_value = self.model if self.model_name is None else self.model_name
         return {
             "model": set_model_value,
             "temperature": self.temperature,

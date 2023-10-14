@@ -123,19 +123,15 @@ def _parse_video_id(url: str) -> Optional[str]:
     if path.endswith("/watch"):
         query = parsed_url.query
         parsed_query = parse_qs(query)
-        if "v" in parsed_query:
-            ids = parsed_query["v"]
-            video_id = ids if isinstance(ids, str) else ids[0]
-        else:
+        if "v" not in parsed_query:
             return None
+        ids = parsed_query["v"]
+        video_id = ids if isinstance(ids, str) else ids[0]
     else:
         path = parsed_url.path.lstrip("/")
         video_id = path.split("/")[-1]
 
-    if len(video_id) != 11:  # Video IDs are 11 characters long
-        return None
-
-    return video_id
+    return None if len(video_id) != 11 else video_id
 
 
 class YoutubeLoader(BaseLoader):
@@ -153,22 +149,19 @@ class YoutubeLoader(BaseLoader):
         self.video_id = video_id
         self.add_video_info = add_video_info
         self.language = language
-        if isinstance(language, str):
-            self.language = [language]
-        else:
-            self.language = language
+        self.language = [language] if isinstance(language, str) else language
         self.translation = translation
         self.continue_on_failure = continue_on_failure
 
     @staticmethod
     def extract_video_id(youtube_url: str) -> str:
         """Extract video id from common YT urls."""
-        video_id = _parse_video_id(youtube_url)
-        if not video_id:
+        if video_id := _parse_video_id(youtube_url):
+            return video_id
+        else:
             raise ValueError(
                 f"Could not determine the video ID for the URL {youtube_url}"
             )
-        return video_id
 
     @classmethod
     def from_youtube_url(cls, youtube_url: str, **kwargs: Any) -> YoutubeLoader:
@@ -235,7 +228,7 @@ class YoutubeLoader(BaseLoader):
                 "Please install it with `pip install pytube`."
             )
         yt = YouTube(f"https://www.youtube.com/watch?v={self.video_id}")
-        video_info = {
+        return {
             "title": yt.title or "Unknown",
             "description": yt.description or "Unknown",
             "view_count": yt.views or 0,
@@ -246,7 +239,6 @@ class YoutubeLoader(BaseLoader):
             "length": yt.length or 0,
             "author": yt.author or "Unknown",
         }
-        return video_info
 
 
 @dataclass
@@ -351,8 +343,7 @@ class GoogleApiYoutubeLoader(BaseLoader):
             maxResults=1,  # we only need one result since channel names are unique
         )
         response = request.execute()
-        channel_id = response["items"][0]["id"]["channelId"]
-        return channel_id
+        return response["items"][0]["id"]["channelId"]
 
     def _get_document_for_channel(self, channel: str, **kwargs: Any) -> List[Document]:
         try:
@@ -404,7 +395,6 @@ class GoogleApiYoutubeLoader(BaseLoader):
                         )
                     else:
                         raise e
-                    pass
             request = self.youtube_client.search().list_next(request, response)
 
         return video_ids

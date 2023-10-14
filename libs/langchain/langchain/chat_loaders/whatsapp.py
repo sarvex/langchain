@@ -63,13 +63,12 @@ class WhatsAppChatLoader(BaseChatLoader):
                     chat_lines.append(current_message)
                 current_message = line
             else:
-                current_message += " " + line.strip()
+                current_message += f" {line.strip()}"
         if current_message:
             chat_lines.append(current_message)
         results: List[Union[HumanMessage, AIMessage]] = []
         for line in chat_lines:
-            result = self._message_line_regex.match(line.strip())
-            if result:
+            if result := self._message_line_regex.match(line.strip()):
                 timestamp, sender, text = result.groups()
                 if not self._ignore_lines.match(text.strip()):
                     results.append(

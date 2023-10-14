@@ -55,9 +55,7 @@ class LlamaContentFormatter(ContentFormatterBase):
                 ),
             }
         else:
-            supported = ",".join(
-                [role for role in LlamaContentFormatter.SUPPORTED_ROLES]
-            )
+            supported = ",".join(list(LlamaContentFormatter.SUPPORTED_ROLES))
             raise ValueError(
                 f"""Received unsupported role. 
                 Supported roles for the LLaMa Foundation Model: {supported}"""
@@ -125,8 +123,7 @@ class AzureMLChatOnlineEndpoint(SimpleChatModel):
         endpoint_url = get_from_dict_or_env(
             values, "endpoint_url", "AZUREML_ENDPOINT_URL"
         )
-        http_client = AzureMLEndpointClient(endpoint_url, endpoint_key)
-        return http_client
+        return AzureMLEndpointClient(endpoint_url, endpoint_key)
 
     @property
     def _identifying_params(self) -> Dict[str, Any]:
@@ -164,7 +161,4 @@ class AzureMLChatOnlineEndpoint(SimpleChatModel):
             messages, _model_kwargs
         )
         response_payload = self.http_client.call(request_payload, **kwargs)
-        generated_text = self.content_formatter.format_response_payload(
-            response_payload
-        )
-        return generated_text
+        return self.content_formatter.format_response_payload(response_payload)

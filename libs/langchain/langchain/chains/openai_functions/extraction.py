@@ -66,14 +66,13 @@ def create_extraction_chain(
     extraction_prompt = prompt or ChatPromptTemplate.from_template(_EXTRACTION_TEMPLATE)
     output_parser = JsonKeyOutputFunctionsParser(key_name="info")
     llm_kwargs = get_llm_kwargs(function)
-    chain = LLMChain(
+    return LLMChain(
         llm=llm,
         prompt=extraction_prompt,
         llm_kwargs=llm_kwargs,
         output_parser=output_parser,
         verbose=verbose,
     )
-    return chain
 
 
 def create_extraction_chain_pydantic(
@@ -110,11 +109,10 @@ def create_extraction_chain_pydantic(
         pydantic_schema=PydanticSchema, attr_name="info"
     )
     llm_kwargs = get_llm_kwargs(function)
-    chain = LLMChain(
+    return LLMChain(
         llm=llm,
         prompt=extraction_prompt,
         llm_kwargs=llm_kwargs,
         output_parser=output_parser,
         verbose=verbose,
     )
-    return chain

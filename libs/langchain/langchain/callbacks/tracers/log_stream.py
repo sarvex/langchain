@@ -167,15 +167,11 @@ class LogStreamCallbackHandler(BaseTracer):
 
         run_tags = run.tags or []
 
-        if (
+        include = (
             self.include_names is None
             and self.include_types is None
             and self.include_tags is None
-        ):
-            include = True
-        else:
-            include = False
-
+        )
         if self.include_names is not None:
             include = include or run.name in self.include_names
         if self.include_types is not None:

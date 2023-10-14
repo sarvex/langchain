@@ -83,14 +83,14 @@ def resolve_criteria(
             for criterion in criteria
             for k, v in resolve_criteria(criterion).items()
         }
-    else:
-        if not criteria:
-            raise ValueError(
-                "Criteria cannot be empty. "
-                "Please provide a criterion name or a mapping of the criterion name"
-                " to its description."
-            )
+    elif criteria:
         criteria_ = dict(criteria)
+    else:
+        raise ValueError(
+            "Criteria cannot be empty. "
+            "Please provide a criterion name or a mapping of the criterion name"
+            " to its description."
+        )
     return criteria_
 
 
@@ -273,7 +273,7 @@ Performance may be significantly worse with other models."
             f"{k}: {v}" if v else k for k, v in criteria_.items()
         ).strip()
         criteria_str = (
-            CRITERIA_INSTRUCTIONS + f"{criteria_str}\n"
+            f"{CRITERIA_INSTRUCTIONS}{criteria_str}\n"
             if criteria_str
             else DEFAULT_CRITERIA
         )
@@ -454,7 +454,7 @@ class LabeledScoreStringEvalChain(ScoreStringEvalChain):
         criteria_ = resolve_criteria(criteria)
         criteria_str = "\n".join(f"{k}: {v}" for k, v in criteria_.items()).strip()
         criteria_str = (
-            CRITERIA_INSTRUCTIONS + f"{criteria_str}\n"
+            f"{CRITERIA_INSTRUCTIONS}{criteria_str}\n"
             if criteria_str
             else DEFAULT_CRITERIA
         )

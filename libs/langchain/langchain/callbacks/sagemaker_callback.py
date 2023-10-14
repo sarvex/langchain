@@ -69,8 +69,7 @@ class SageMakerCallbackHandler(BaseCallbackHandler):
 
         llm_starts = self.metrics["llm_starts"]
 
-        resp: Dict[str, Any] = {}
-        resp.update({"action": "on_llm_start"})
+        resp: Dict[str, Any] = {"action": "on_llm_start"}
         resp.update(flatten_dict(serialized))
         resp.update(self.metrics)
 
@@ -104,8 +103,7 @@ class SageMakerCallbackHandler(BaseCallbackHandler):
 
         llm_ends = self.metrics["llm_ends"]
 
-        resp: Dict[str, Any] = {}
-        resp.update({"action": "on_llm_end"})
+        resp: Dict[str, Any] = {"action": "on_llm_end"}
         resp.update(flatten_dict(response.llm_output or {}))
 
         resp.update(self.metrics)
@@ -136,8 +134,7 @@ class SageMakerCallbackHandler(BaseCallbackHandler):
 
         chain_starts = self.metrics["chain_starts"]
 
-        resp: Dict[str, Any] = {}
-        resp.update({"action": "on_chain_start"})
+        resp: Dict[str, Any] = {"action": "on_chain_start"}
         resp.update(flatten_dict(serialized))
         resp.update(self.metrics)
 

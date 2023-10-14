@@ -64,7 +64,7 @@ def load_dataset(uri: str) -> List[Dict]:
         )
 
     dataset = load_dataset(f"LangChainDatasets/{uri}")
-    return [d for d in dataset["train"]]
+    return list(dataset["train"])
 
 
 _EVALUATOR_MAP: Dict[
@@ -124,20 +124,19 @@ def load_evaluator(
             f"\nValid types are: {list(_EVALUATOR_MAP.keys())}"
         )
     evaluator_cls = _EVALUATOR_MAP[evaluator]
-    if issubclass(evaluator_cls, LLMEvalChain):
-        try:
-            llm = llm or ChatOpenAI(model="gpt-4", temperature=0)
-        except Exception as e:
-            raise ValueError(
-                f"Evaluation with the {evaluator_cls} requires a "
-                "language model to function."
-                " Failed to create the default 'gpt-4' model."
-                " Please manually provide an evaluation LLM"
-                " or check your openai credentials."
-            ) from e
-        return evaluator_cls.from_llm(llm=llm, **kwargs)
-    else:
+    if not issubclass(evaluator_cls, LLMEvalChain):
         return evaluator_cls(**kwargs)
+    try:
+        llm = llm or ChatOpenAI(model="gpt-4", temperature=0)
+    except Exception as e:
+        raise ValueError(
+            f"Evaluation with the {evaluator_cls} requires a "
+            "language model to function."
+            " Failed to create the default 'gpt-4' model."
+            " Please manually provide an evaluation LLM"
+            " or check your openai credentials."
+        ) from e
+    return evaluator_cls.from_llm(llm=llm, **kwargs)
 
 
 def load_evaluators(

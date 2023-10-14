@@ -81,9 +81,7 @@ class SelfHostedEmbeddings(SelfHostedPipeline, Embeddings):
         """
         texts = list(map(lambda x: x.replace("\n", " "), texts))
         embeddings = self.client(self.pipeline_ref, texts)
-        if not isinstance(embeddings, list):
-            return embeddings.tolist()
-        return embeddings
+        return embeddings.tolist() if not isinstance(embeddings, list) else embeddings
 
     def embed_query(self, text: str) -> List[float]:
         """Compute query embeddings using a HuggingFace transformer model.
@@ -96,6 +94,4 @@ class SelfHostedEmbeddings(SelfHostedPipeline, Embeddings):
         """
         text = text.replace("\n", " ")
         embeddings = self.client(self.pipeline_ref, text)
-        if not isinstance(embeddings, list):
-            return embeddings.tolist()
-        return embeddings
+        return embeddings.tolist() if not isinstance(embeddings, list) else embeddings

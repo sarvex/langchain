@@ -29,9 +29,7 @@ class NarrativeModel(BaseModel):
     @validator("*", pre=True)
     def empty_str_to_none(cls, v: str) -> Union[str, None]:
         """Empty strings are not allowed"""
-        if v == "":
-            return None
-        return v
+        return None if not v else v
 
 
 class EntityModel(BaseModel):
@@ -48,8 +46,7 @@ class EntityModel(BaseModel):
 
     @validator("name")
     def lower_case_name(cls, v: str) -> str:
-        v = v.lower()
-        return v
+        return v.lower()
 
 
 class CausalModel(BaseModel):
@@ -72,8 +69,7 @@ class EntitySettingModel(BaseModel):
 
     @validator("name")
     def lower_case_transform(cls, v: str) -> str:
-        v = v.lower()
-        return v
+        return v.lower()
 
 
 class SystemSettingModel(BaseModel):
@@ -211,7 +207,7 @@ class StoryModel(BaseModel):
                     + " is not an attribute in your story!"
                 )
             else:
-                return str(error)
+                return error
 
         if self.query.llm_error_msg == "":
             try:

@@ -349,9 +349,7 @@ class AimCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
 
         finish_res = deepcopy(finish)
 
-        text = "OUTPUT:\n{}\n\nLOG:\n{}".format(
-            finish_res.return_values["output"], finish_res.log
-        )
+        text = f'OUTPUT:\n{finish_res.return_values["output"]}\n\nLOG:\n{finish_res.log}'
         self._run.track(aim.Text(text), name="on_agent_finish", context=resp)
 
     def on_agent_action(self, action: AgentAction, **kwargs: Any) -> Any:
@@ -369,9 +367,7 @@ class AimCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
 
         action_res = deepcopy(action)
 
-        text = "TOOL INPUT:\n{}\n\nLOG:\n{}".format(
-            action_res.tool_input, action_res.log
-        )
+        text = f"TOOL INPUT:\n{action_res.tool_input}\n\nLOG:\n{action_res.log}"
         self._run.track(aim.Text(text), name="on_agent_action", context=resp)
 
     def flush_tracker(

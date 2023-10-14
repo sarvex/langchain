@@ -59,6 +59,8 @@ class TestUnitCPALChain_MathWordProblems(unittest.TestCase):
         on univariate math examples.
         """
 
+
+
         class LLMMockData(pydantic.BaseModel):
             question: str
             completion: str
@@ -77,8 +79,8 @@ class TestUnitCPALChain_MathWordProblems(unittest.TestCase):
                         ).get_format_instructions()
                     },
                 )
-                prompt = prompt_template.format(narrative_input=self.question)
-                return prompt
+                return prompt_template.format(narrative_input=self.question)
+
 
         narrative = LLMMockData(
             **{
@@ -169,7 +171,7 @@ class TestUnitCPALChain_MathWordProblems(unittest.TestCase):
         fake_llm = FakeLLM()
         fake_llm.queries = {}
         for mock_data in [narrative, causal_model, intervention, query]:
-            fake_llm.queries.update({mock_data.prompt: mock_data.completion})
+            fake_llm.queries[mock_data.prompt] = mock_data.completion
         return fake_llm
 
     def test_narrative_chain(self) -> None:

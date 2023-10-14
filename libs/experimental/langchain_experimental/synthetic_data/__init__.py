@@ -39,11 +39,10 @@ class DatasetGenerator:
         self.sentence_preferences = sentence_preferences or {}
 
     def __call__(self, fields_collection: List[List[Any]]) -> List[Dict[str, Any]]:
-        results: List[Dict[str, Any]] = []
-        for fields in fields_collection:
-            results.append(
-                self.generator(
-                    {"fields": fields, "preferences": self.sentence_preferences}
-                )
+        results: List[Dict[str, Any]] = [
+            self.generator(
+                {"fields": fields, "preferences": self.sentence_preferences}
             )
+            for fields in fields_collection
+        ]
         return results

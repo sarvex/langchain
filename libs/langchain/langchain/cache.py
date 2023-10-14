@@ -147,8 +147,7 @@ def _loads_generations(generations_str: str) -> Union[RETURN_VAL_TYPE, None]:
         RETURN_VAL_TYPE: A list of generations.
     """
     try:
-        generations = [loads(_item_str) for _item_str in json.loads(generations_str)]
-        return generations
+        return [loads(_item_str) for _item_str in json.loads(generations_str)]
     except (json.JSONDecodeError, TypeError):
         # deferring the (soft) handling to after the legacy-format attempt
         pass
@@ -219,8 +218,7 @@ class SQLAlchemyCache(BaseCache):
             .order_by(self.cache_schema.idx)
         )
         with Session(self.engine) as session:
-            rows = session.execute(stmt).fetchall()
-            if rows:
+            if rows := session.execute(stmt).fetchall():
                 try:
                     return [loads(row[0]) for row in rows]
                 except Exception:
@@ -302,11 +300,8 @@ class UpstashRedisCache(BaseCache):
     def lookup(self, prompt: str, llm_string: str) -> Optional[RETURN_VAL_TYPE]:
         """Look up based on prompt and llm_string."""
         generations = []
-        # Read from a HASH
-        results = self.redis.hgetall(self._key(prompt, llm_string))
-        if results:
-            for _, text in results.items():
-                generations.append(Generation(text=text))
+        if results := self.redis.hgetall(self._key(prompt, llm_string)):
+            generations.extend(Generation(text=text) for _, text in results.items())
         return generations if generations else None
 
     def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
@@ -340,10 +335,7 @@ class UpstashRedisCache(BaseCache):
         This flushes the *whole* db.
         """
         asynchronous = kwargs.get("asynchronous", False)
-        if asynchronous:
-            asynchronous = "ASYNC"
-        else:
-            asynchronous = "SYNC"
+        asynchronous = "ASYNC" if asynchronous else "SYNC"
         self.redis.flushdb(flush_type=asynchronous)
 
 
@@ -388,9 +380,7 @@ class RedisCache(BaseCache):
     def lookup(self, prompt: str, llm_string: str) -> Optional[RETURN_VAL_TYPE]:
         """Look up based on prompt and llm_string."""
         generations = []
-        # Read from a Redis HASH
-        results = self.redis.hgetall(self._key(prompt, llm_string))
-        if results:
+        if results := self.redis.hgetall(self._key(prompt, llm_string)):
             for _, text in results.items():
                 try:
                     generations.append(loads(text))
@@ -524,13 +514,11 @@ class RedisSemanticCache(BaseCache):
         """Look up based on prompt and llm_string."""
         llm_cache = self._get_llm_cache(llm_string)
         generations: List = []
-        # Read from a Hash
-        results = llm_cache.similarity_search(
+        if results := llm_cache.similarity_search(
             query=prompt,
             k=1,
             distance_threshold=self.score_threshold,
-        )
-        if results:
+        ):
             for document in results:
                 try:
                     generations.extend(loads(document.metadata["return_val"]))
@@ -561,7 +549,7 @@ class RedisSemanticCache(BaseCache):
         metadata = {
             "llm_string": llm_string,
             "prompt": prompt,
-            "return_val": dumps([g for g in return_val]),
+            "return_val": dumps(list(return_val)),
         }
         llm_cache.add_texts(texts=[prompt], metadatas=[metadata])
 
@@ -657,8 +645,7 @@ class GPTCache(BaseCache):
 
         _gptcache = self._get_gptcache(llm_string)
 
-        res = get(prompt, cache_obj=_gptcache)
-        if res:
+        if res := get(prompt, cache_obj=_gptcache):
             return [
                 Generation(**generation_dict) for generation_dict in json.loads(res)
             ]
@@ -703,8 +690,9 @@ def _ensure_cache_exists(cache_client: momento.CacheClient, cache_name: str) -> 
     from momento.responses import CreateCache
 
     create_cache_response = cache_client.create_cache(cache_name)
-    if isinstance(create_cache_response, CreateCache.Success) or isinstance(
-        create_cache_response, CreateCache.CacheAlreadyExists
+    if isinstance(
+        create_cache_response,
+        (CreateCache.Success, CreateCache.CacheAlreadyExists),
     ):
         return None
     elif isinstance(create_cache_response, CreateCache.Error):
@@ -915,7 +903,7 @@ class CassandraCache(BaseCache):
         """
         try:
             from cassio.table import ElasticCassandraTable
-        except (ImportError, ModuleNotFoundError):
+        except ImportError:
             raise ValueError(
                 "Could not import cassio python package. "
                 "Please install it with `pip install cassio`."
@@ -942,15 +930,11 @@ class CassandraCache(BaseCache):
             llm_string=_hash(llm_string),
             prompt=_hash(prompt),
         )
-        if item is not None:
-            generations = _loads_generations(item["body_blob"])
-            # this protects against malformed cached items:
-            if generations is not None:
-                return generations
-            else:
-                return None
-        else:
+        if item is None:
             return None
+        generations = _loads_generations(item["body_blob"])
+            # this protects against malformed cached items:
+        return generations if generations is not None else None
 
     def update(self, prompt: str, llm_string: str, return_val: RETURN_VAL_TYPE) -> None:
         """Update cache based on prompt and llm_string."""
@@ -1037,7 +1021,7 @@ class CassandraSemanticCache(BaseCache):
         """
         try:
             from cassio.table import MetadataVectorCassandraTable
-        except (ImportError, ModuleNotFoundError):
+        except ImportError:
             raise ValueError(
                 "Could not import cassio python package. "
                 "Please install it with `pip install cassio`."
@@ -1097,10 +1081,7 @@ class CassandraSemanticCache(BaseCache):
     def lookup(self, prompt: str, llm_string: str) -> Optional[RETURN_VAL_TYPE]:
         """Look up based on prompt and llm_string."""
         hit_with_id = self.lookup_with_id(prompt, llm_string)
-        if hit_with_id is not None:
-            return hit_with_id[1]
-        else:
-            return None
+        return hit_with_id[1] if hit_with_id is not None else None
 
     def lookup_with_id(
         self, prompt: str, llm_string: str
@@ -1110,28 +1091,21 @@ class CassandraSemanticCache(BaseCache):
         If there are hits, return (document_id, cached_entry)
         """
         prompt_embedding: List[float] = self._get_embedding(text=prompt)
-        hits = list(
-            self.table.metric_ann_search(
-                vector=prompt_embedding,
-                metadata={"_llm_string_hash": _hash(llm_string)},
-                n=1,
-                metric=self.distance_metric,
-                metric_threshold=self.score_threshold,
-            )
-        )
-        if hits:
-            hit = hits[0]
-            generations = _loads_generations(hit["body_blob"])
-            if generations is not None:
-                # this protects against malformed cached items:
-                return (
-                    hit["row_id"],
-                    generations,
+        if not (
+            hits := list(
+                self.table.metric_ann_search(
+                    vector=prompt_embedding,
+                    metadata={"_llm_string_hash": _hash(llm_string)},
+                    n=1,
+                    metric=self.distance_metric,
+                    metric_threshold=self.score_threshold,
                 )
-            else:
-                return None
-        else:
+            )
+        ):
             return None
+        hit = hits[0]
+        generations = _loads_generations(hit["body_blob"])
+        return (hit["row_id"], generations) if generations is not None else None
 
     def lookup_with_id_through_llm(
         self, prompt: str, llm: LLM, stop: Optional[List[str]] = None
@@ -1180,8 +1154,7 @@ class SQLAlchemyMd5Cache(BaseCache):
 
     def lookup(self, prompt: str, llm_string: str) -> Optional[RETURN_VAL_TYPE]:
         """Look up based on prompt and llm_string."""
-        rows = self._search_rows(prompt, llm_string)
-        if rows:
+        if rows := self._search_rows(prompt, llm_string):
             return [loads(row[0]) for row in rows]
         return None
 

@@ -91,9 +91,7 @@ class WebBaseLoader(BaseLoader):
         self.raise_for_status = raise_for_status
         self.bs_get_text_kwargs = bs_get_text_kwargs or {}
         self.bs_kwargs = bs_kwargs or {}
-        if session:
-            self.session = session
-        else:
+        if not session:
             session = requests.Session()
             header_template = header_template or default_header_template.copy()
             if not header_template.get("User-Agent"):
@@ -111,7 +109,7 @@ class WebBaseLoader(BaseLoader):
             session.verify = verify_ssl
             if proxies:
                 session.proxies.update(proxies)
-            self.session = session
+        self.session = session
         self.continue_on_failure = continue_on_failure
         self.autoset_encoding = autoset_encoding
         self.encoding = encoding
@@ -137,12 +135,11 @@ class WebBaseLoader(BaseLoader):
                 except aiohttp.ClientConnectionError as e:
                     if i == retries - 1:
                         raise
-                    else:
-                        logger.warning(
-                            f"Error fetching {url} with attempt "
-                            f"{i + 1}/{retries}: {e}. Retrying..."
-                        )
-                        await asyncio.sleep(cooldown * backoff**i)
+                    logger.warning(
+                        f"Error fetching {url} with attempt "
+                        f"{i + 1}/{retries}: {e}. Retrying..."
+                    )
+                    await asyncio.sleep(cooldown * backoff**i)
         raise ValueError("retry count exceeded")
 
     async def _fetch_with_rate_limit(
@@ -199,10 +196,7 @@ class WebBaseLoader(BaseLoader):
         for i, result in enumerate(results):
             url = urls[i]
             if parser is None:
-                if url.endswith(".xml"):
-                    parser = "xml"
-                else:
-                    parser = self.default_parser
+                parser = "xml" if url.endswith(".xml") else self.default_parser
                 self._check_parser(parser)
             final_results.append(BeautifulSoup(result, parser, **self.bs_kwargs))
 
@@ -217,11 +211,7 @@ class WebBaseLoader(BaseLoader):
         from bs4 import BeautifulSoup
 
         if parser is None:
-            if url.endswith(".xml"):
-                parser = "xml"
-            else:
-                parser = self.default_parser
-
+            parser = "xml" if url.endswith(".xml") else self.default_parser
         self._check_parser(parser)
 
         html_doc = self.session.get(url, **self.requests_kwargs)

@@ -43,13 +43,11 @@ def trim_query(query: str) -> str:
     )
 
     lines = query.split("\n")
-    new_query = ""
-
-    for line in lines:
-        if line.strip().upper().startswith(keywords):
-            new_query += line + "\n"
-
-    return new_query
+    return "".join(
+        line + "\n"
+        for line in lines
+        if line.strip().upper().startswith(keywords)
+    )
 
 
 def extract_cypher(text: str) -> str:
@@ -69,10 +67,7 @@ def use_simple_prompt(llm: BaseLanguageModel) -> bool:
         return True
 
     # Bedrock anthropic
-    if hasattr(llm, "model_id") and "anthropic" in llm.model_id:  # type: ignore
-        return True
-
-    return False
+    return bool(hasattr(llm, "model_id") and "anthropic" in llm.model_id)
 
 
 PROMPT_SELECTOR = ConditionalPromptSelector(
@@ -120,8 +115,7 @@ class NeptuneOpenCypherQAChain(Chain):
 
         :meta private:
         """
-        _output_keys = [self.output_key]
-        return _output_keys
+        return [self.output_key]
 
     @classmethod
     def from_llm(

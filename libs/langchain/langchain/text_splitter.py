@@ -164,10 +164,7 @@ class TextSplitter(BaseDocumentTransformer, ABC):
         text = separator.join(docs)
         if self._strip_whitespace:
             text = text.strip()
-        if text == "":
-            return None
-        else:
-            return text
+        return None if not text else text
 
     def _merge_splits(self, splits: Iterable[str], separator: str) -> List[str]:
         # We now want to combine these smaller pieces into medium size
@@ -180,7 +177,7 @@ class TextSplitter(BaseDocumentTransformer, ABC):
         for d in splits:
             _len = self._length_function(d)
             if (
-                total + _len + (separator_len if len(current_doc) > 0 else 0)
+                total + _len + (separator_len if current_doc else 0)
                 > self._chunk_size
             ):
                 if total > self._chunk_size:
@@ -188,15 +185,16 @@ class TextSplitter(BaseDocumentTransformer, ABC):
                         f"Created a chunk of size {total}, "
                         f"which is longer than the specified {self._chunk_size}"
                     )
-                if len(current_doc) > 0:
+                if current_doc:
                     doc = self._join_docs(current_doc, separator)
                     if doc is not None:
                         docs.append(doc)
                     # Keep on popping if:
                     # - we have a larger chunk than in the chunk overlap
                     # - or if we still have any chunks and the length is long
-                    while total > self._chunk_overlap or (
-                        total + _len + (separator_len if len(current_doc) > 0 else 0)
+                    while (
+                        total > self._chunk_overlap
+                        or total + _len + (separator_len if current_doc else 0)
                         > self._chunk_size
                         and total > 0
                     ):
@@ -272,7 +270,7 @@ class TextSplitter(BaseDocumentTransformer, ABC):
                 "allowed_special": allowed_special,
                 "disallowed_special": disallowed_special,
             }
-            kwargs = {**kwargs, **extra_kwargs}
+            kwargs = kwargs | extra_kwargs
 
         return cls(length_function=_tiktoken_encoder, **kwargs)
 
@@ -397,11 +395,7 @@ class MarkdownHeaderTextSplitter:
 
             if stripped_line.startswith("```"):
                 # code block in one row
-                if stripped_line.count("```") >= 2:
-                    in_code_block = False
-                else:
-                    in_code_block = not in_code_block
-
+                in_code_block = False if stripped_line.count("```") >= 2 else not in_code_block
             if in_code_block:
                 current_content.append(stripped_line)
                 continue
@@ -596,39 +590,35 @@ class HTMLHeaderTextSplitter:
         # map xhtml namespace prefix
         ns_map = {"h": "http://www.w3.org/1999/xhtml"}
 
-        # build list of elements from DOM
-        elements = []
-        for element in result_dom.findall("*//*", ns_map):
-            if element.findall("*[@class='headers']") or element.findall(
-                "*[@class='chunk']"
-            ):
-                elements.append(
-                    ElementType(
-                        url=file,
-                        xpath="".join(
-                            [
-                                node.text
-                                for node in element.findall("*[@class='xpath']", ns_map)
-                            ]
-                        ),
-                        content="".join(
-                            [
-                                node.text
-                                for node in element.findall("*[@class='chunk']", ns_map)
-                            ]
-                        ),
-                        metadata={
-                            # Add text of specified headers to metadata using header
-                            # mapping.
-                            header_mapping[node.tag]: node.text
-                            for node in filter(
-                                lambda x: x.tag in header_filter,
-                                element.findall("*[@class='headers']/*", ns_map),
-                            )
-                        },
+        elements = [
+            ElementType(
+                url=file,
+                xpath="".join(
+                    [
+                        node.text
+                        for node in element.findall("*[@class='xpath']", ns_map)
+                    ]
+                ),
+                content="".join(
+                    [
+                        node.text
+                        for node in element.findall("*[@class='chunk']", ns_map)
+                    ]
+                ),
+                metadata={
+                    # Add text of specified headers to metadata using header
+                    # mapping.
+                    header_mapping[node.tag]: node.text
+                    for node in filter(
+                        lambda x: x.tag in header_filter,
+                        element.findall("*[@class='headers']/*", ns_map),
                     )
-                )
-
+                },
+            )
+            for element in result_dom.findall("*//*", ns_map)
+            if element.findall("*[@class='headers']")
+            or element.findall("*[@class='chunk']")
+        ]
         if not self.return_each_element:
             return self.aggregate_elements_to_chunks(elements)
         else:
@@ -781,12 +771,11 @@ class SentenceTransformersTokenTextSplitter(TextSplitter):
     _max_length_equal_32_bit_integer: int = 2**32
 
     def _encode(self, text: str) -> List[int]:
-        token_ids_with_start_and_end_token_ids = self.tokenizer.encode(
+        return self.tokenizer.encode(
             text,
             max_length=self._max_length_equal_32_bit_integer,
             truncation="do_not_truncate",
         )
-        return token_ids_with_start_and_end_token_ids
 
 
 class Language(str, Enum):

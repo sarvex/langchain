@@ -127,7 +127,7 @@ def test_pickbest_textembedder_w_full_label_w_embed_and_keep() -> None:
 
     named_actions = {"action1": rl_chain.EmbedAndKeep([str1, str2, str3])}
     context = {"context": rl_chain.EmbedAndKeep(ctx_str_1)}
-    expected = f"""shared |context {ctx_str_1 + " " + encoded_ctx_str_1} \n0:-0.0:1.0 |action1 {str1 + " " + encoded_str1} \n|action1 {str2 + " " + encoded_str2} \n|action1 {str3 + " " + encoded_str3} """  # noqa: E501
+    expected = f"""shared |context {ctx_str_1} {encoded_ctx_str_1} \n0:-0.0:1.0 |action1 {str1} {encoded_str1} \n|action1 {str2} {encoded_str2} \n|action1 {str3} {encoded_str3} """
     selected = pick_best_chain.PickBestSelected(index=0, probability=1.0, score=0.0)
     event = pick_best_chain.PickBestEvent(
         inputs={}, to_select_from=named_actions, based_on=context, selected=selected
@@ -314,7 +314,7 @@ def test_pickbest_textembedder_more_namespaces_w_full_label_w_partial_emakeep() 
         "context1": ctx_str_1,
         "context2": rl_chain.EmbedAndKeep(ctx_str_2),
     }
-    expected = f"""shared |context1 {ctx_str_1} |context2 {ctx_str_2 + " " + encoded_ctx_str_2} \n0:-0.0:1.0 |a {str1} |b {str1 + " " + encoded_str1} \n|action1 {str2} \n|action1 {str3 + " " + encoded_str3} """  # noqa: E501
+    expected = f"""shared |context1 {ctx_str_1} |context2 {ctx_str_2} {encoded_ctx_str_2} \n0:-0.0:1.0 |a {str1} |b {str1} {encoded_str1} \n|action1 {str2} \n|action1 {str3} {encoded_str3} """
 
     selected = pick_best_chain.PickBestSelected(index=0, probability=1.0, score=0.0)
     event = pick_best_chain.PickBestEvent(
@@ -362,7 +362,7 @@ def test_raw_features_underscored() -> None:
     # Embeddings and raw features
     named_actions = {"action": rl_chain.EmbedAndKeep([str1])}
     context = {"context": rl_chain.EmbedAndKeep(ctx_str)}
-    expected_embed_and_keep = f"""shared |context {ctx_str_underscored + " " + encoded_ctx_str} \n|action {str1_underscored + " " + encoded_str1} """  # noqa: E501
+    expected_embed_and_keep = f"""shared |context {ctx_str_underscored} {encoded_ctx_str} \n|action {str1_underscored} {encoded_str1} """
     event = pick_best_chain.PickBestEvent(
         inputs={}, to_select_from=named_actions, based_on=context
     )

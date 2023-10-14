@@ -26,8 +26,7 @@ def _select_project_name(suggested_project_name: str) -> str:
     while True:
         project_name = typer.prompt("Project Name", default=suggested_project_name)
 
-        project_name_diagnostics = lint_name(project_name)
-        if project_name_diagnostics:
+        if project_name_diagnostics := lint_name(project_name):
             typer.echo(
                 f"{typer.style('Warning:', fg=typer.colors.MAGENTA)}"
                 f" The project name"

@@ -95,11 +95,12 @@ class DeepSparse(LLM):
                 llm("Tell me a joke.")
         """
         if self.streaming:
-            combined_output = ""
-            for chunk in self._stream(
-                prompt=prompt, stop=stop, run_manager=run_manager, **kwargs
-            ):
-                combined_output += chunk.text
+            combined_output = "".join(
+                chunk.text
+                for chunk in self._stream(
+                    prompt=prompt, stop=stop, run_manager=run_manager, **kwargs
+                )
+            )
             text = combined_output
         else:
             text = (

@@ -71,7 +71,7 @@ def analyze_text(
             "gulpease_index": textstat.gulpease_index(text),
             "osman": textstat.osman(text),
         }
-        resp.update({"text_complexity_metrics": text_complexity_metrics})
+        resp["text_complexity_metrics"] = text_complexity_metrics
         resp.update(text_complexity_metrics)
 
     if nlp is not None:
@@ -151,16 +151,12 @@ class FlyteCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
         self.llm_starts += 1
         self.starts += 1
 
-        resp: Dict[str, Any] = {}
-        resp.update({"action": "on_llm_start"})
+        resp: Dict[str, Any] = {"action": "on_llm_start"}
         resp.update(flatten_dict(serialized))
         resp.update(self.get_custom_callback_meta())
 
-        prompt_responses = []
-        for prompt in prompts:
-            prompt_responses.append(prompt)
-
-        resp.update({"prompts": prompt_responses})
+        prompt_responses = list(prompts)
+        resp["prompts"] = prompt_responses
 
         self.deck.append(self.markdown_renderer().to_html("### LLM Start"))
         self.deck.append(
@@ -176,8 +172,7 @@ class FlyteCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
         self.llm_ends += 1
         self.ends += 1
 
-        resp: Dict[str, Any] = {}
-        resp.update({"action": "on_llm_end"})
+        resp: Dict[str, Any] = {"action": "on_llm_end"}
         resp.update(flatten_dict(response.llm_output or {}))
         resp.update(self.get_custom_callback_meta())
 
@@ -234,8 +229,7 @@ class FlyteCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
         self.chain_starts += 1
         self.starts += 1
 
-        resp: Dict[str, Any] = {}
-        resp.update({"action": "on_chain_start"})
+        resp: Dict[str, Any] = {"action": "on_chain_start"}
         resp.update(flatten_dict(serialized))
         resp.update(self.get_custom_callback_meta())
 

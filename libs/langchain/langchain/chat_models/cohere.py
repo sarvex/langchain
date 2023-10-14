@@ -22,7 +22,7 @@ from langchain.schema.output import ChatGeneration, ChatGenerationChunk, ChatRes
 
 
 def get_role(message: BaseMessage) -> str:
-    if isinstance(message, ChatMessage) or isinstance(message, HumanMessage):
+    if isinstance(message, (ChatMessage, HumanMessage)):
         return "User"
     elif isinstance(message, AIMessage):
         return "Chatbot"

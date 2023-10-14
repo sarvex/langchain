@@ -93,13 +93,13 @@ def analyze_text(
         dep_out = spacy.displacy.render(  # type: ignore
             doc, style="dep", jupyter=False, page=True
         )
-        dep_output_path = Path(output_dir, hash_string(f"dep-{text}") + ".html")
+        dep_output_path = Path(output_dir, f'{hash_string(f"dep-{text}")}.html')
         dep_output_path.open("w", encoding="utf-8").write(dep_out)
 
         ent_out = spacy.displacy.render(  # type: ignore
             doc, style="ent", jupyter=False, page=True
         )
-        ent_output_path = Path(output_dir, hash_string(f"ent-{text}") + ".html")
+        ent_output_path = Path(output_dir, f'{hash_string(f"ent-{text}")}.html')
         ent_output_path.open("w", encoding="utf-8").write(ent_out)
 
         text_visualizations = {
@@ -562,7 +562,6 @@ class WandbCallbackHandler(BaseMetadataCallbackHandler, BaseCallbackHandler):
             except NotImplementedError as e:
                 print("Could not save model.")
                 print(repr(e))
-                pass
             self.run.log_artifact(model_artifact)
 
         if finish or reset:

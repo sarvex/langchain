@@ -57,8 +57,6 @@ class ComprehendIntent:
         """
 
         threshold = config.get("threshold")
-        intent_found = False
-
         endpoint_arn = self._get_arn()
         response = self.client.classify_document(
             Text=prompt_value, EndpointArn=endpoint_arn
@@ -68,14 +66,13 @@ class ComprehendIntent:
             self.moderation_beacon["moderation_input"] = prompt_value
             self.moderation_beacon["moderation_output"] = response
 
-        for class_result in response["Classes"]:
-            if (
+        intent_found = any(
+            (
                 class_result["Score"] >= threshold
                 and class_result["Name"] == "UNDESIRED_PROMPT"
-            ):
-                intent_found = True
-                break
-
+            )
+            for class_result in response["Classes"]
+        )
         if self.callback and self.callback.intent_callback:
             if intent_found:
                 self.moderation_beacon["moderation_status"] = "LABELS_FOUND"

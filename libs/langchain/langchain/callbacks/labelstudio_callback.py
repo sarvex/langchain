@@ -179,16 +179,16 @@ class LabelStudioCallbackHandler(BaseCallbackHandler):
         if self.project_id is not None:
             self.ls_project = self.ls_client.get_project(int(self.project_id))
         else:
-            project_title = datetime.today().strftime(self.project_name)
-            existing_projects = self.ls_client.get_projects(title=project_title)
-            if existing_projects:
+            project_title = datetime.now().strftime(self.project_name)
+            if existing_projects := self.ls_client.get_projects(
+                title=project_title
+            ):
                 self.ls_project = existing_projects[0]
-                self.project_id = self.ls_project.id
             else:
                 self.ls_project = self.ls_client.create_project(
                     title=project_title, label_config=self.project_config
                 )
-                self.project_id = self.ls_project.id
+            self.project_id = self.ls_project.id
         self.parsed_label_config = self.ls_project.parsed_label_config
 
         # Find the first TextArea tag
@@ -231,36 +231,34 @@ class LabelStudioCallbackHandler(BaseCallbackHandler):
     def add_prompts_generations(
         self, run_id: str, generations: List[List[Generation]]
     ) -> None:
-        # Create tasks in Label Studio
-        tasks = []
         prompts = self.payload[run_id]["prompts"]
         model_version = (
             self.payload[run_id]["kwargs"]
             .get("invocation_params", {})
             .get("model_name")
         )
-        for prompt, generation in zip(prompts, generations):
-            tasks.append(
-                {
-                    "data": {
-                        self.value: prompt,
-                        "run_id": run_id,
-                    },
-                    "predictions": [
-                        {
-                            "result": [
-                                {
-                                    "from_name": self.from_name,
-                                    "to_name": self.to_name,
-                                    "type": "textarea",
-                                    "value": {"text": [g.text for g in generation]},
-                                }
-                            ],
-                            "model_version": model_version,
-                        }
-                    ],
-                }
-            )
+        tasks = [
+            {
+                "data": {
+                    self.value: prompt,
+                    "run_id": run_id,
+                },
+                "predictions": [
+                    {
+                        "result": [
+                            {
+                                "from_name": self.from_name,
+                                "to_name": self.to_name,
+                                "type": "textarea",
+                                "value": {"text": [g.text for g in generation]},
+                            }
+                        ],
+                        "model_version": model_version,
+                    }
+                ],
+            }
+            for prompt, generation in zip(prompts, generations)
+        ]
         self.ls_project.import_tasks(tasks)
 
     def on_llm_start(
@@ -311,14 +309,13 @@ class LabelStudioCallbackHandler(BaseCallbackHandler):
 
         prompts = []
         for message_list in messages:
-            dialog = []
-            for message in message_list:
-                dialog.append(
-                    {
-                        "role": self._get_message_role(message),
-                        "content": message.content,
-                    }
-                )
+            dialog = [
+                {
+                    "role": self._get_message_role(message),
+                    "content": message.content,
+                }
+                for message in message_list
+            ]
             prompts.append(dialog)
         self.payload[str(run_id)] = {
             "prompts": prompts,
